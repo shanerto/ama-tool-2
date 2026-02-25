@@ -55,7 +55,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               placeholder="Enter admin password"
             />
           </div>
@@ -65,7 +65,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="w-full bg-brand-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>

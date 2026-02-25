@@ -87,7 +87,7 @@ export default function AdminHomePage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={200}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
         <input
           type="text"
@@ -95,13 +95,13 @@ export default function AdminHomePage() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={500}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
         {createError && <p className="text-red-500 text-sm mb-2">{createError}</p>}
         <button
           type="submit"
           disabled={creating}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
         >
           {creating ? "Creating..." : "Create Event"}
         </button>
@@ -144,7 +144,7 @@ export default function AdminHomePage() {
               <div className="flex gap-2 shrink-0">
                 <Link
                   href={`/admin/events/${event.id}`}
-                  className="px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-medium transition-colors"
+                  className="px-3 py-1.5 text-xs bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 font-medium transition-colors"
                 >
                   Manage
                 </Link>

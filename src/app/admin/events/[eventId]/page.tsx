@@ -89,7 +89,7 @@ export default function AdminEventPage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       {/* Back link */}
-      <Link href="/admin" className="text-sm text-indigo-600 hover:underline">
+      <Link href="/admin" className="text-sm text-brand-700 hover:underline">
         ← All Events
       </Link>
 
@@ -103,7 +103,7 @@ export default function AdminEventPage() {
           href={`/events/${eventId}`}
           target="_blank"
           rel="noreferrer"
-          className="text-xs text-indigo-600 hover:underline mt-1 inline-block"
+          className="text-xs text-brand-700 hover:underline mt-1 inline-block"
         >
           Open public board ↗
         </a>
@@ -120,7 +120,7 @@ export default function AdminEventPage() {
           }`}
         >
           Open
-          <span className="ml-1.5 bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded-full">
+          <span className="ml-1.5 bg-brand-100 text-brand-700 text-xs px-1.5 py-0.5 rounded-full">
             {openQuestions.length}
           </span>
         </button>
@@ -158,7 +158,7 @@ export default function AdminEventPage() {
                 <span
                   className={`text-lg font-bold ${
                     q.score > 0
-                      ? "text-indigo-600"
+                      ? "text-brand-700"
                       : q.score < 0
                       ? "text-red-500"
                       : "text-gray-400"
