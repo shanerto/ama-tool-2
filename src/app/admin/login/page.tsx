@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
@@ -42,6 +43,9 @@ function LoginForm() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-sm">
         <h1 className="text-xl font-bold mb-1">Admin Login</h1>
         <p className="text-sm text-gray-500 mb-6">AMA Board — Host Mode</p>
+        <Link href="/" className="text-xs text-brand-700 hover:underline block -mt-4 mb-6">
+          ← Back to events
+        </Link>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

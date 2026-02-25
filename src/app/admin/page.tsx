@@ -47,6 +47,8 @@ export default function AdminHomePage() {
   const [startsAt, setStartsAt] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchEvents() {
     const res = await fetch("/api/admin/events");
@@ -105,6 +107,21 @@ export default function AdminHomePage() {
       body: JSON.stringify({ id: event.id, isActive: !event.isActive }),
     });
     await fetchEvents();
+  }
+
+  async function deleteEvent(id: string) {
+    setDeleting(true);
+    try {
+      await fetch("/api/admin/events", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setConfirmDeleteId(null);
+      await fetchEvents();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -190,18 +207,44 @@ export default function AdminHomePage() {
                 </p>
               </div>
               <div className="flex gap-2 shrink-0">
-                <Link
-                  href={`/admin/events/${event.id}`}
-                  className="px-3 py-1.5 text-xs bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 font-medium transition-colors"
-                >
-                  Manage
-                </Link>
-                <button
-                  onClick={() => toggleActive(event)}
-                  className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
-                >
-                  {event.isActive ? "Deactivate" : "Activate"}
-                </button>
+                {confirmDeleteId === event.id ? (
+                  <>
+                    <button
+                      onClick={() => deleteEvent(event.id)}
+                      disabled={deleting}
+                      className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {deleting ? "Deleting..." : "Yes, delete"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`/admin/events/${event.id}`}
+                      className="px-3 py-1.5 text-xs bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 font-medium transition-colors"
+                    >
+                      Manage
+                    </Link>
+                    <button
+                      onClick={() => toggleActive(event)}
+                      className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    >
+                      {event.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(event.id)}
+                      className="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           ))}
