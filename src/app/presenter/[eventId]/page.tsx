@@ -12,6 +12,8 @@ type Question = {
   submittedName: string | null;
   isAnonymous: boolean;
   status: "OPEN" | "ANSWERED";
+  isHidden: boolean;
+  pinnedAt: string | null;
   createdAt: string;
   score: number;
   myVote: 1 | -1 | null;
@@ -75,8 +77,12 @@ export default function PresenterEventPage() {
   // ── Derived: sorted open questions ──────────────────────────────────────
 
   const openQuestions = questions
-    .filter((q) => q.status === "OPEN")
+    .filter((q) => q.status === "OPEN" && !q.isHidden)
     .sort((a, b) => {
+      // Pinned questions always float to top
+      const aPinned = a.pinnedAt ? 1 : 0;
+      const bPinned = b.pinnedAt ? 1 : 0;
+      if (bPinned !== aPinned) return bPinned - aPinned;
       if (sortMode === "top") {
         return (
           b.score - a.score ||
@@ -446,6 +452,9 @@ export default function PresenterEventPage() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
+                  {q.pinnedAt && (
+                    <span className="inline-block text-brand-400 text-sm mb-1" title="Pinned by host">📌 Pinned</span>
+                  )}
                   <p className="text-xl font-medium text-white leading-snug">
                     {q.text}
                   </p>

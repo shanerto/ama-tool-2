@@ -22,14 +22,17 @@ model Event {
 }
 
 model Question {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   eventId       String
   text          String
   submittedName String?
-  isAnonymous   Boolean  @default(false)
-  status        Status   @default(OPEN)
-  createdAt     DateTime @default(now())
-  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  isAnonymous   Boolean   @default(false)
+  status        Status    @default(OPEN)
+  submitterId   String?
+  isHidden      Boolean   @default(false)
+  pinnedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   votes         Vote[]
 
   @@index([eventId, status])

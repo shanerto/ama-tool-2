@@ -6,7 +6,7 @@ import { VOTER_COOKIE } from "@/lib/voter";
 type Params = { params: Promise<{ eventId: string }> };
 
 // GET /api/events/[eventId]/questions
-// Public → OPEN only; Admin (cookie present) → OPEN + ANSWERED
+// Public → OPEN + not hidden; Admin (cookie present) → all
 export async function GET(req: NextRequest, { params }: Params) {
   const { eventId } = await params;
   const sortParam = req.nextUrl.searchParams.get("sort"); // "score" | "newest"
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const questions = await prisma.question.findMany({
     where: {
       eventId,
-      ...(isAdmin ? {} : { status: "OPEN" }),
+      ...(isAdmin ? {} : { status: "OPEN", isHidden: false }),
     },
     include: {
       votes: {
@@ -46,17 +46,35 @@ export async function GET(req: NextRequest, { params }: Params) {
       submittedName: q.isAnonymous ? null : q.submittedName,
       isAnonymous: q.isAnonymous,
       status: q.status,
+      isHidden: q.isHidden,
+      pinnedAt: q.pinnedAt,
+      isOwn: voterId ? q.submitterId === voterId : false,
       createdAt: q.createdAt,
       score,
       myVote,
     };
   });
 
-  // Sort
+  // Sort: pinned questions always first, then by score or newest
   if (!sortParam || sortParam === "score") {
-    enriched.sort((a, b) => b.score - a.score || b.createdAt.getTime() - a.createdAt.getTime());
+    enriched.sort((a, b) => {
+      const aPinned = a.pinnedAt ? 1 : 0;
+      const bPinned = b.pinnedAt ? 1 : 0;
+      if (bPinned !== aPinned) return bPinned - aPinned;
+      if (aPinned && bPinned) {
+        return new Date(b.pinnedAt!).getTime() - new Date(a.pinnedAt!).getTime();
+      }
+      return b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  } else {
+    // newest: pinned still float to top, then by createdAt
+    enriched.sort((a, b) => {
+      const aPinned = a.pinnedAt ? 1 : 0;
+      const bPinned = b.pinnedAt ? 1 : 0;
+      if (bPinned !== aPinned) return bPinned - aPinned;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
-  // "newest" keeps the default orderBy: createdAt desc from Prisma
 
   return NextResponse.json({
     event: {
@@ -83,6 +101,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const text = body?.text?.trim();
   const isAnonymous: boolean = body?.isAnonymous === true;
   const submittedName = isAnonymous ? null : body?.submittedName?.trim() || null;
+  const submitterId = req.cookies.get(VOTER_COOKIE)?.value ?? null;
 
   if (!text) {
     return NextResponse.json({ error: "Question text is required" }, { status: 400 });
@@ -101,8 +120,11 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const question = await prisma.question.create({
-    data: { eventId, text, isAnonymous, submittedName },
+    data: { eventId, text, isAnonymous, submittedName, submitterId },
   });
 
-  return NextResponse.json({ ...question, score: 0, myVote: null }, { status: 201 });
+  return NextResponse.json(
+    { ...question, score: 0, myVote: null, isOwn: true, isHidden: false, pinnedAt: null },
+    { status: 201 }
+  );
 }

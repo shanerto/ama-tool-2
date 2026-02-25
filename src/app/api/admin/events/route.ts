@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(events);
 }
 
-// PATCH /api/admin/events — toggle event active status
-// Body: { id, isActive }
+// PATCH /api/admin/events — update event fields (admin)
+// Body: { id, isActive?, isVotingOpen?, title?, description?, startsAt? }
 export async function PATCH(req: NextRequest) {
   const token = req.cookies.get(ADMIN_COOKIE)?.value;
   const isAdmin = token ? await verifySessionToken(token) : false;
@@ -29,20 +29,28 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, isActive, isVotingOpen } = body;
+  const { id, isActive, isVotingOpen, title, description, startsAt } = body;
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
-  if (typeof isActive !== "boolean" && typeof isVotingOpen !== "boolean") {
-    return NextResponse.json(
-      { error: "isActive or isVotingOpen (boolean) is required" },
-      { status: 400 }
-    );
-  }
 
-  const data: { isActive?: boolean; isVotingOpen?: boolean } = {};
+  const data: {
+    isActive?: boolean;
+    isVotingOpen?: boolean;
+    title?: string;
+    description?: string | null;
+    startsAt?: Date | null;
+  } = {};
+
   if (typeof isActive === "boolean") data.isActive = isActive;
   if (typeof isVotingOpen === "boolean") data.isVotingOpen = isVotingOpen;
+  if (typeof title === "string" && title.trim()) data.title = title.trim();
+  if ("description" in body) data.description = description?.trim() || null;
+  if ("startsAt" in body) data.startsAt = startsAt ? new Date(startsAt) : null;
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+  }
 
   const event = await prisma.event.update({ where: { id }, data });
   return NextResponse.json(event);

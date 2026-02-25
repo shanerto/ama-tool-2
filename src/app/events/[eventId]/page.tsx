@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -10,6 +10,9 @@ type Question = {
   submittedName: string | null;
   isAnonymous: boolean;
   status: "OPEN" | "ANSWERED";
+  isHidden: boolean;
+  pinnedAt: string | null;
+  isOwn: boolean;
   createdAt: string;
   score: number;
   myVote: 1 | -1 | null;
@@ -25,10 +28,24 @@ type Event = {
 
 type SortMode = "score" | "newest";
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? decodeURIComponent(match[2]) : null;
+const EDIT_WINDOW_MS = 2 * 60 * 1000;
+
+function tokenize(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  );
+}
+
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let intersection = 0;
+  for (const w of a) if (b.has(w)) intersection++;
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
 }
 
 export default function EventPage() {
@@ -47,7 +64,20 @@ export default function EventPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Inline editing state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Tick to re-evaluate edit windows
+  const [, setTick] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 5000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchQuestions = useCallback(async () => {
     try {
@@ -68,13 +98,11 @@ export default function EventPage() {
     }
   }, [eventId, sortMode]);
 
-  // Initial load + sort-change fetch
   useEffect(() => {
     setLoading(true);
     fetchQuestions();
   }, [fetchQuestions]);
 
-  // Polling every 3 seconds
   useEffect(() => {
     pollRef.current = setInterval(fetchQuestions, 3000);
     return () => {
@@ -83,7 +111,6 @@ export default function EventPage() {
   }, [fetchQuestions]);
 
   async function handleVote(questionId: string, value: 1 | -1 | 0) {
-    // Optimistic update
     setQuestions((prev) =>
       prev.map((q) => {
         if (q.id !== questionId) return q;
@@ -106,7 +133,6 @@ export default function EventPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Reconcile with server truth
         setQuestions((prev) =>
           prev.map((q) =>
             q.id === questionId ? { ...q, score: data.score, myVote: data.myVote } : q
@@ -114,7 +140,7 @@ export default function EventPage() {
         );
       }
     } catch {
-      // Let poll reconcile on next tick
+      // Let poll reconcile
     }
   }
 
@@ -147,7 +173,6 @@ export default function EventPage() {
       }
       setFormText("");
       setFormName("");
-      // Refresh immediately
       await fetchQuestions();
     } catch {
       setSubmitError("Network error. Please try again.");
@@ -156,12 +181,69 @@ export default function EventPage() {
     }
   }
 
+  async function handleEditSave(questionId: string) {
+    const text = editText.trim();
+    if (!text) {
+      setEditError("Question text is required.");
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`/api/questions/${questionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditError(data.error ?? "Failed to save edit.");
+        return;
+      }
+      setEditingId(null);
+      setEditText("");
+      await fetchQuestions();
+    } catch {
+      setEditError("Network error. Please try again.");
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
+  async function handleRetract(questionId: string) {
+    try {
+      const res = await fetch(`/api/questions/${questionId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Failed to retract question.");
+        return;
+      }
+      await fetchQuestions();
+    } catch {
+      alert("Network error. Please try again.");
+    }
+  }
+
+  // Fuzzy duplicate detection
+  const duplicateWarnings = useMemo(() => {
+    const trimmed = formText.trim();
+    if (trimmed.length < 15) return [];
+    const inputTokens = tokenize(trimmed);
+    if (inputTokens.size === 0) return [];
+    return questions
+      .filter((q) => jaccardSimilarity(inputTokens, tokenize(q.text)) > 0.4)
+      .slice(0, 2);
+  }, [formText, questions]);
+
   const sortedQuestions =
     sortMode === "newest"
-      ? [...questions].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      : questions; // already sorted by score from server
+      ? [...questions].sort((a, b) => {
+          const aPinned = a.pinnedAt ? 1 : 0;
+          const bPinned = b.pinnedAt ? 1 : 0;
+          if (bPinned !== aPinned) return bPinned - aPinned;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })
+      : questions; // already sorted by server
 
   if (loading) {
     return (
@@ -220,6 +302,20 @@ export default function EventPage() {
             {formText.length} / 280
           </span>
         </div>
+
+        {/* Duplicate warning */}
+        {duplicateWarnings.length > 0 && (
+          <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+            <p className="font-medium mb-1">Similar question{duplicateWarnings.length > 1 ? "s" : ""} already asked — consider voting instead:</p>
+            <ul className="space-y-1">
+              {duplicateWarnings.map((q) => (
+                <li key={q.id} className="text-amber-700 italic truncate">
+                  &ldquo;{q.text.slice(0, 100)}{q.text.length > 100 ? "…" : ""}&rdquo;
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 mt-3">
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
@@ -309,6 +405,23 @@ export default function EventPage() {
               question={q}
               onVote={handleVote}
               votingOpen={event?.isVotingOpen ?? true}
+              isEditing={editingId === q.id}
+              editText={editText}
+              editError={editError}
+              editSaving={editSaving}
+              onEditStart={() => {
+                setEditingId(q.id);
+                setEditText(q.text);
+                setEditError(null);
+              }}
+              onEditTextChange={setEditText}
+              onEditSave={() => handleEditSave(q.id)}
+              onEditCancel={() => {
+                setEditingId(null);
+                setEditText("");
+                setEditError(null);
+              }}
+              onRetract={() => handleRetract(q.id)}
             />
           ))}
         </ul>
@@ -321,12 +434,31 @@ function QuestionCard({
   question,
   onVote,
   votingOpen,
+  isEditing,
+  editText,
+  editError,
+  editSaving,
+  onEditStart,
+  onEditTextChange,
+  onEditSave,
+  onEditCancel,
+  onRetract,
 }: {
   question: Question;
   onVote: (id: string, value: 1 | -1 | 0) => void;
   votingOpen: boolean;
+  isEditing: boolean;
+  editText: string;
+  editError: string | null;
+  editSaving: boolean;
+  onEditStart: () => void;
+  onEditTextChange: (text: string) => void;
+  onEditSave: () => void;
+  onEditCancel: () => void;
+  onRetract: () => void;
 }) {
-  const { id, text, submittedName, isAnonymous, score, myVote, createdAt } = question;
+  const { id, text, submittedName, isAnonymous, score, myVote, createdAt, isOwn, pinnedAt } = question;
+  const withinEditWindow = isOwn && Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
 
   return (
     <li className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4">
@@ -375,22 +507,89 @@ function QuestionCard({
 
       {/* Content column */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-800 leading-relaxed">{text}</p>
-        <p className="text-xs text-gray-400 mt-2">
-          {isAnonymous ? "Anonymous" : submittedName ?? "Unknown"} ·{" "}
-          {new Date(createdAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+        {isEditing ? (
+          <div>
+            <div className="relative">
+              <textarea
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-400"
+                rows={3}
+                value={editText}
+                onChange={(e) => onEditTextChange(e.target.value.slice(0, 280))}
+                maxLength={280}
+                autoFocus
+              />
+              <span className={`absolute bottom-2 right-3 text-xs tabular-nums ${
+                editText.length >= 261 ? "text-orange-500" : "text-gray-400"
+              }`}>
+                {editText.length} / 280
+              </span>
+            </div>
+            {editError && <p className="text-red-500 text-xs mt-1">{editError}</p>}
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={onEditSave}
+                disabled={editSaving || editText.trim().length === 0}
+                className="px-3 py-1 text-xs bg-brand-700 text-white rounded-lg hover:bg-brand-800 disabled:opacity-50 font-medium transition-colors"
+              >
+                {editSaving ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={onEditCancel}
+                className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-800 leading-relaxed">
+              {pinnedAt && (
+                <span className="inline-block mr-1.5 text-brand-700" title="Pinned by host">📌</span>
+              )}
+              {text}
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              {isAnonymous ? "Anonymous" : submittedName ?? "Unknown"} ·{" "}
+              {new Date(createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </>
+        )}
       </div>
+
+      {/* Edit / retract buttons for own questions within window */}
+      {withinEditWindow && !isEditing && (
+        <div className="shrink-0 flex flex-col gap-1">
+          <button
+            onClick={onEditStart}
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-700 transition-colors"
+            title="Edit question"
+            aria-label="Edit question"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.263-4.263a1.75 1.75 0 0 0 0-2.473ZM2.75 8a.75.75 0 0 1 .75.75v2h2a.75.75 0 0 1 0 1.5h-2v2a.75.75 0 0 1-1.5 0v-2h-2a.75.75 0 0 1 0-1.5h2v-2A.75.75 0 0 1 2.75 8Z" />
+            </svg>
+          </button>
+          <button
+            onClick={onRetract}
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+            title="Retract question"
+            aria-label="Retract question"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+              <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      )}
     </li>
   );
 }
 
 // ── EventTime ────────────────────────────────────────────────────────────────
-// Displays the event's start time in ET plus the viewer's local time.
-// Local time is resolved after mount to avoid SSR/hydration mismatch.
 
 function EventTime({ startsAt }: { startsAt: string }) {
   const date = new Date(startsAt);
@@ -409,7 +608,6 @@ function EventTime({ startsAt }: { startsAt: string }) {
     hour12: true,
   }).format(date);
 
-  // Resolved after mount only — avoids server/client mismatch
   const [localTime, setLocalTime] = useState<string | null>(null);
   const [viewerIsET, setViewerIsET] = useState(false);
 

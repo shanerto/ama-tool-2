@@ -10,6 +10,8 @@ type Question = {
   submittedName: string | null;
   isAnonymous: boolean;
   status: "OPEN" | "ANSWERED";
+  isHidden: boolean;
+  pinnedAt: string | null;
   createdAt: string;
   score: number;
   myVote: 1 | -1 | null;
@@ -22,7 +24,7 @@ type Event = {
   isVotingOpen: boolean;
 };
 
-type Tab = "open" | "answered" | "analytics";
+type Tab = "open" | "answered" | "hidden" | "analytics";
 
 export default function AdminEventPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -78,11 +80,50 @@ export default function AdminEventPage() {
     }
   }
 
+  async function hideQuestion(questionId: string) {
+    setActionLoading(questionId);
+    try {
+      await fetch(`/api/questions/${questionId}/hide`, { method: "POST" });
+      await fetchQuestions();
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function unhideQuestion(questionId: string) {
+    setActionLoading(questionId);
+    try {
+      await fetch(`/api/questions/${questionId}/hide`, { method: "DELETE" });
+      await fetchQuestions();
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function pinQuestion(questionId: string) {
+    setActionLoading(questionId);
+    try {
+      await fetch(`/api/questions/${questionId}/pin`, { method: "POST" });
+      await fetchQuestions();
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function unpinQuestion(questionId: string) {
+    setActionLoading(questionId);
+    try {
+      await fetch(`/api/questions/${questionId}/pin`, { method: "DELETE" });
+      await fetchQuestions();
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   async function toggleVoting() {
     if (!event) return;
     setVotingToggling(true);
     const next = !event.isVotingOpen;
-    // Optimistic
     setEvent((prev) => prev ? { ...prev, isVotingOpen: next } : prev);
     try {
       await fetch("/api/admin/events", {
@@ -91,7 +132,6 @@ export default function AdminEventPage() {
         body: JSON.stringify({ id: eventId, isVotingOpen: next }),
       });
     } catch {
-      // Revert on error
       setEvent((prev) => prev ? { ...prev, isVotingOpen: !next } : prev);
     } finally {
       setVotingToggling(false);
@@ -99,19 +139,30 @@ export default function AdminEventPage() {
   }
 
   const openQuestions = questions
-    .filter((q) => q.status === "OPEN")
-    .sort((a, b) => b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .filter((q) => q.status === "OPEN" && !q.isHidden)
+    .sort((a, b) => {
+      const aPinned = a.pinnedAt ? 1 : 0;
+      const bPinned = b.pinnedAt ? 1 : 0;
+      if (bPinned !== aPinned) return bPinned - aPinned;
+      return b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const answeredQuestions = questions
-    .filter((q) => q.status === "ANSWERED")
+    .filter((q) => q.status === "ANSWERED" && !q.isHidden)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const displayedQuestions = tab === "open" ? openQuestions : answeredQuestions;
+  const hiddenQuestions = questions
+    .filter((q) => q.isHidden)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const displayedQuestions =
+    tab === "open" ? openQuestions : tab === "answered" ? answeredQuestions : hiddenQuestions;
 
   // Analytics stats
   const totalQuestions = questions.length;
   const openCount = openQuestions.length;
   const answeredCount = answeredQuestions.length;
+  const hiddenCount = hiddenQuestions.length;
   const totalVotes = questions.reduce((sum, q) => sum + Math.abs(q.score), 0);
   const anonymousCount = questions.filter((q) => q.isAnonymous).length;
   const namedCount = questions.filter((q) => !q.isAnonymous).length;
@@ -190,9 +241,7 @@ export default function AdminEventPage() {
         <button
           onClick={() => setTab("open")}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            tab === "open"
-              ? "bg-white shadow text-gray-900"
-              : "text-gray-500 hover:text-gray-700"
+            tab === "open" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Open
@@ -203,9 +252,7 @@ export default function AdminEventPage() {
         <button
           onClick={() => setTab("answered")}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            tab === "answered"
-              ? "bg-white shadow text-gray-900"
-              : "text-gray-500 hover:text-gray-700"
+            tab === "answered" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Answered
@@ -214,11 +261,22 @@ export default function AdminEventPage() {
           </span>
         </button>
         <button
+          onClick={() => setTab("hidden")}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === "hidden" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Hidden
+          {hiddenQuestions.length > 0 && (
+            <span className="ml-1.5 bg-gray-200 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
+              {hiddenQuestions.length}
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => setTab("analytics")}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            tab === "analytics"
-              ? "bg-white shadow text-gray-900"
-              : "text-gray-500 hover:text-gray-700"
+            tab === "analytics" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Analytics
@@ -232,6 +290,7 @@ export default function AdminEventPage() {
             { label: "Total Questions", value: totalQuestions },
             { label: "Open", value: openCount },
             { label: "Answered", value: answeredCount },
+            { label: "Hidden", value: hiddenCount },
             { label: "Total Votes Cast", value: totalVotes },
             { label: "Anonymous", value: `${anonymousCount} (${anonPct}%)` },
             { label: "Named", value: `${namedCount} (${100 - anonPct}%)` },
@@ -247,13 +306,17 @@ export default function AdminEventPage() {
         </div>
       )}
 
-      {/* Question list (open / answered tabs) */}
+      {/* Question list (open / answered / hidden tabs) */}
       {tab !== "analytics" && (
         loading ? (
           <p className="text-gray-400 text-sm">Loading...</p>
         ) : displayedQuestions.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400">
-            {tab === "open" ? "No open questions yet." : "No answered questions yet."}
+            {tab === "open"
+              ? "No open questions yet."
+              : tab === "answered"
+              ? "No answered questions yet."
+              : "No hidden questions."}
           </div>
         ) : (
           <ul className="space-y-3">
@@ -280,7 +343,12 @@ export default function AdminEventPage() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 leading-relaxed">{q.text}</p>
+                  <p className="text-sm text-gray-800 leading-relaxed">
+                    {q.pinnedAt && (
+                      <span className="inline-block mr-1.5 text-brand-700" title="Pinned">📌</span>
+                    )}
+                    {q.text}
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
                     {q.isAnonymous ? "Anonymous" : q.submittedName ?? "Unknown"} ·{" "}
                     {new Date(q.createdAt).toLocaleTimeString([], {
@@ -290,23 +358,57 @@ export default function AdminEventPage() {
                   </p>
                 </div>
 
-                {/* Action */}
-                <div className="shrink-0">
-                  {q.status === "OPEN" ? (
-                    <button
-                      onClick={() => markAnswered(q.id)}
-                      disabled={actionLoading === q.id}
-                      className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                    >
-                      {actionLoading === q.id ? "..." : "Mark Answered"}
-                    </button>
-                  ) : (
+                {/* Actions */}
+                <div className="shrink-0 flex flex-col gap-1.5 items-end">
+                  {tab === "open" && (
+                    <>
+                      <button
+                        onClick={() => markAnswered(q.id)}
+                        disabled={actionLoading === q.id}
+                        className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                      >
+                        {actionLoading === q.id ? "..." : "Mark Answered"}
+                      </button>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => q.pinnedAt ? unpinQuestion(q.id) : pinQuestion(q.id)}
+                          disabled={actionLoading === q.id}
+                          className={`px-2.5 py-1 text-xs rounded-lg font-medium disabled:opacity-50 transition-colors whitespace-nowrap ${
+                            q.pinnedAt
+                              ? "bg-brand-100 text-brand-700 hover:bg-brand-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                          title={q.pinnedAt ? "Unpin" : "Pin to top"}
+                        >
+                          {q.pinnedAt ? "📌 Unpin" : "Pin"}
+                        </button>
+                        <button
+                          onClick={() => hideQuestion(q.id)}
+                          disabled={actionLoading === q.id}
+                          className="px-2.5 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                          title="Hide from public without answering"
+                        >
+                          Hide
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {tab === "answered" && (
                     <button
                       onClick={() => markOpen(q.id)}
                       disabled={actionLoading === q.id}
                       className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
                     >
                       {actionLoading === q.id ? "..." : "Reopen"}
+                    </button>
+                  )}
+                  {tab === "hidden" && (
+                    <button
+                      onClick={() => unhideQuestion(q.id)}
+                      disabled={actionLoading === q.id}
+                      className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {actionLoading === q.id ? "..." : "Unhide"}
                     </button>
                   )}
                 </div>
