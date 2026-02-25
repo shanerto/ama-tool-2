@@ -99,14 +99,24 @@ export default function AdminEventPage() {
         {event?.description && (
           <p className="text-gray-500 text-sm mt-1">{event.description}</p>
         )}
-        <a
-          href={`/events/${eventId}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs text-brand-700 hover:underline mt-1 inline-block"
-        >
-          Open public board ↗
-        </a>
+        <div className="flex items-center gap-4 mt-1">
+          <a
+            href={`/events/${eventId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-brand-700 hover:underline"
+          >
+            Open public board ↗
+          </a>
+          <a
+            href={`/presenter/${eventId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-white bg-brand-700 hover:bg-brand-800 px-2.5 py-1 rounded-md font-medium transition-colors"
+          >
+            Presenter Mode ↗
+          </a>
+        </div>
       </div>
 
       {/* Tab bar */}
