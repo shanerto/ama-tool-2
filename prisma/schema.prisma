@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  questions   Question[]
+
+  @@map("events")
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  eventId       String
+  text          String
+  submittedName String?
+  isAnonymous   Boolean  @default(false)
+  status        Status   @default(OPEN)
+  createdAt     DateTime @default(now())
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  votes         Vote[]
+
+  @@index([eventId, status])
+  @@map("questions")
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  questionId String
+  voterId    String
+  value      Int      // +1 or -1
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, voterId])
+  @@index([voterId])
+  @@map("votes")
+}
+
+enum Status {
+  OPEN
+  ANSWERED
+}

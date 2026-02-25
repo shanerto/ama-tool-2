@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth transitions for vote buttons */
+@layer utilities {
+  .transition-score {
+    transition: all 0.15s ease-in-out;
+  }
+}
