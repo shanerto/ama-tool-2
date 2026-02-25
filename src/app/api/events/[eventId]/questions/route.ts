@@ -58,7 +58,15 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
   // "newest" keeps the default orderBy: createdAt desc from Prisma
 
-  return NextResponse.json({ event, questions: enriched });
+  return NextResponse.json({
+    event: {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      isVotingOpen: event.isVotingOpen,
+    },
+    questions: enriched,
+  });
 }
 
 // POST /api/events/[eventId]/questions — submit a question (public)
@@ -77,6 +85,12 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (!text) {
     return NextResponse.json({ error: "Question text is required" }, { status: 400 });
+  }
+  if (text.length > 280) {
+    return NextResponse.json(
+      { error: "Questions must be 280 characters or fewer." },
+      { status: 400 }
+    );
   }
   if (!isAnonymous && !submittedName) {
     return NextResponse.json(

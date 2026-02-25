@@ -19,9 +19,10 @@ type Event = {
   id: string;
   title: string;
   description: string | null;
+  isVotingOpen: boolean;
 };
 
-type Tab = "open" | "answered";
+type Tab = "open" | "answered" | "analytics";
 
 export default function AdminEventPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -31,6 +32,7 @@ export default function AdminEventPage() {
   const [tab, setTab] = useState<Tab>("open");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [votingToggling, setVotingToggling] = useState(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -76,6 +78,26 @@ export default function AdminEventPage() {
     }
   }
 
+  async function toggleVoting() {
+    if (!event) return;
+    setVotingToggling(true);
+    const next = !event.isVotingOpen;
+    // Optimistic
+    setEvent((prev) => prev ? { ...prev, isVotingOpen: next } : prev);
+    try {
+      await fetch("/api/admin/events", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: eventId, isVotingOpen: next }),
+      });
+    } catch {
+      // Revert on error
+      setEvent((prev) => prev ? { ...prev, isVotingOpen: !next } : prev);
+    } finally {
+      setVotingToggling(false);
+    }
+  }
+
   const openQuestions = questions
     .filter((q) => q.status === "OPEN")
     .sort((a, b) => b.score - a.score || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -85,6 +107,15 @@ export default function AdminEventPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const displayedQuestions = tab === "open" ? openQuestions : answeredQuestions;
+
+  // Analytics stats
+  const totalQuestions = questions.length;
+  const openCount = openQuestions.length;
+  const answeredCount = answeredQuestions.length;
+  const totalVotes = questions.reduce((sum, q) => sum + Math.abs(q.score), 0);
+  const anonymousCount = questions.filter((q) => q.isAnonymous).length;
+  const namedCount = questions.filter((q) => !q.isAnonymous).length;
+  const anonPct = totalQuestions > 0 ? Math.round((anonymousCount / totalQuestions) * 100) : 0;
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
@@ -119,6 +150,41 @@ export default function AdminEventPage() {
         </div>
       </div>
 
+      {/* Voting toggle */}
+      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white shadow-sm px-4 py-3 mb-6">
+        <div>
+          <p className="text-sm font-semibold text-gray-800">Voting</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {event?.isVotingOpen
+              ? "Participants can currently vote on questions."
+              : "Voting is frozen — participants cannot vote."}
+          </p>
+        </div>
+        <button
+          onClick={toggleVoting}
+          disabled={votingToggling || !event}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+            event?.isVotingOpen ? "bg-brand-700" : "bg-gray-300"
+          }`}
+          role="switch"
+          aria-checked={event?.isVotingOpen ?? true}
+          title={event?.isVotingOpen ? "Click to close voting" : "Click to open voting"}
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+              event?.isVotingOpen ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+        <span
+          className={`ml-3 text-xs font-semibold shrink-0 ${
+            event?.isVotingOpen ? "text-brand-700" : "text-gray-500"
+          }`}
+        >
+          {event?.isVotingOpen ? "OPEN" : "CLOSED"}
+        </span>
+      </div>
+
       {/* Tab bar */}
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6 w-fit">
         <button
@@ -147,73 +213,107 @@ export default function AdminEventPage() {
             {answeredQuestions.length}
           </span>
         </button>
+        <button
+          onClick={() => setTab("analytics")}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === "analytics"
+              ? "bg-white shadow text-gray-900"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Analytics
+        </button>
       </div>
 
-      {/* Question list */}
-      {loading ? (
-        <p className="text-gray-400 text-sm">Loading...</p>
-      ) : displayedQuestions.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400">
-          {tab === "open" ? "No open questions yet." : "No answered questions yet."}
-        </div>
-      ) : (
-        <ul className="space-y-3">
-          {displayedQuestions.map((q) => (
-            <li
-              key={q.id}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4"
+      {/* Analytics tab */}
+      {tab === "analytics" && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[
+            { label: "Total Questions", value: totalQuestions },
+            { label: "Open", value: openCount },
+            { label: "Answered", value: answeredCount },
+            { label: "Total Votes Cast", value: totalVotes },
+            { label: "Anonymous", value: `${anonymousCount} (${anonPct}%)` },
+            { label: "Named", value: `${namedCount} (${100 - anonPct}%)` },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-4"
             >
-              {/* Score badge */}
-              <div className="flex flex-col items-center min-w-[2.5rem]">
-                <span
-                  className={`text-lg font-bold ${
-                    q.score > 0
-                      ? "text-brand-700"
-                      : q.score < 0
-                      ? "text-red-500"
-                      : "text-gray-400"
-                  }`}
-                >
-                  {q.score}
-                </span>
-                <span className="text-xs text-gray-400">votes</span>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-800 leading-relaxed">{q.text}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {q.isAnonymous ? "Anonymous" : q.submittedName ?? "Unknown"} ·{" "}
-                  {new Date(q.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-
-              {/* Action */}
-              <div className="shrink-0">
-                {q.status === "OPEN" ? (
-                  <button
-                    onClick={() => markAnswered(q.id)}
-                    disabled={actionLoading === q.id}
-                    className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                  >
-                    {actionLoading === q.id ? "..." : "Mark Answered"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => markOpen(q.id)}
-                    disabled={actionLoading === q.id}
-                    className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                  >
-                    {actionLoading === q.id ? "..." : "Reopen"}
-                  </button>
-                )}
-              </div>
-            </li>
+              <p className="text-2xl font-bold text-gray-900">{value}</p>
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </div>
           ))}
-        </ul>
+        </div>
+      )}
+
+      {/* Question list (open / answered tabs) */}
+      {tab !== "analytics" && (
+        loading ? (
+          <p className="text-gray-400 text-sm">Loading...</p>
+        ) : displayedQuestions.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400">
+            {tab === "open" ? "No open questions yet." : "No answered questions yet."}
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {displayedQuestions.map((q) => (
+              <li
+                key={q.id}
+                className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4"
+              >
+                {/* Score badge */}
+                <div className="flex flex-col items-center min-w-[2.5rem]">
+                  <span
+                    className={`text-lg font-bold ${
+                      q.score > 0
+                        ? "text-brand-700"
+                        : q.score < 0
+                        ? "text-red-500"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {q.score}
+                  </span>
+                  <span className="text-xs text-gray-400">votes</span>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-800 leading-relaxed">{q.text}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {q.isAnonymous ? "Anonymous" : q.submittedName ?? "Unknown"} ·{" "}
+                    {new Date(q.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+
+                {/* Action */}
+                <div className="shrink-0">
+                  {q.status === "OPEN" ? (
+                    <button
+                      onClick={() => markAnswered(q.id)}
+                      disabled={actionLoading === q.id}
+                      className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {actionLoading === q.id ? "..." : "Mark Answered"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => markOpen(q.id)}
+                      disabled={actionLoading === q.id}
+                      className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {actionLoading === q.id ? "..." : "Reopen"}
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )
       )}
     </main>
   );

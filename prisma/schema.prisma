@@ -9,12 +9,13 @@ datasource db {
 }
 
 model Event {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  questions   Question[]
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  isActive     Boolean    @default(true)
+  isVotingOpen Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  questions    Question[]
 
   @@map("events")
 }

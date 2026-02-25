@@ -29,14 +29,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, isActive } = body;
-  if (!id || typeof isActive !== "boolean") {
-    return NextResponse.json({ error: "id and isActive are required" }, { status: 400 });
+  const { id, isActive, isVotingOpen } = body;
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  }
+  if (typeof isActive !== "boolean" && typeof isVotingOpen !== "boolean") {
+    return NextResponse.json(
+      { error: "isActive or isVotingOpen (boolean) is required" },
+      { status: 400 }
+    );
   }
 
-  const event = await prisma.event.update({
-    where: { id },
-    data: { isActive },
-  });
+  const data: { isActive?: boolean; isVotingOpen?: boolean } = {};
+  if (typeof isActive === "boolean") data.isActive = isActive;
+  if (typeof isVotingOpen === "boolean") data.isVotingOpen = isVotingOpen;
+
+  const event = await prisma.event.update({ where: { id }, data });
   return NextResponse.json(event);
 }

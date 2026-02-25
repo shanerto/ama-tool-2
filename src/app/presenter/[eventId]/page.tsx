@@ -59,6 +59,9 @@ export default function PresenterEventPage() {
   // Index-based keyboard navigation
   const [selectedIdx, setSelectedIdx] = useState(0);
 
+  // IDs currently fading out before being removed
+  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
+
   // undoQueue: questionId -> { question, deadline }
   const [undoQueue, setUndoQueue] = useState<Record<string, UndoEntry>>({});
 
@@ -163,7 +166,19 @@ export default function PresenterEventPage() {
       );
       if (!question) return;
 
-      // Optimistic: hide immediately
+      // Start fade-out animation
+      setFadingIds((prev) => new Set(prev).add(questionId));
+
+      // Wait for CSS transition to complete (~350ms), then hide
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      setFadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(questionId);
+        return next;
+      });
+
+      // Optimistic: hide immediately after fade
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === questionId ? { ...q, status: "ANSWERED" as const } : q
@@ -396,6 +411,7 @@ export default function PresenterEventPage() {
         <ul className="space-y-4">
           {openQuestions.map((q, idx) => {
             const isSelected = idx === selectedIdx;
+            const isFading = fadingIds.has(q.id);
             return (
               <li
                 key={q.id}
@@ -403,7 +419,9 @@ export default function PresenterEventPage() {
                   cardRefs.current[q.id] = el;
                 }}
                 onClick={() => setSelectedIdx(idx)}
-                className={`rounded-xl p-5 flex gap-5 cursor-pointer transition-all ${
+                className={`rounded-xl p-5 flex gap-5 cursor-pointer transition-all duration-300 ${
+                  isFading ? "opacity-0 scale-95" : "opacity-100 scale-100"
+                } ${
                   isSelected
                     ? "bg-gray-800 ring-2 ring-brand-700 shadow-lg"
                     : "bg-gray-900 border border-gray-800 hover:border-gray-600"

@@ -19,6 +19,7 @@ type Event = {
   id: string;
   title: string;
   description: string | null;
+  isVotingOpen: boolean;
 };
 
 type SortMode = "score" | "newest";
@@ -196,14 +197,27 @@ export default function EventPage() {
         className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8"
       >
         <h2 className="font-semibold mb-3">Ask a Question</h2>
-        <textarea
-          className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-400"
-          rows={3}
-          placeholder="What's your question?"
-          value={formText}
-          onChange={(e) => setFormText(e.target.value)}
-          maxLength={1000}
-        />
+        <div className="relative">
+          <textarea
+            className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-400"
+            rows={3}
+            placeholder="What's your question?"
+            value={formText}
+            onChange={(e) => setFormText(e.target.value.slice(0, 280))}
+            maxLength={280}
+          />
+          <span
+            className={`absolute bottom-2 right-3 text-xs tabular-nums ${
+              formText.length >= 261
+                ? formText.length >= 280
+                  ? "text-red-500 font-semibold"
+                  : "text-orange-500"
+                : "text-gray-400"
+            }`}
+          >
+            {formText.length} / 280
+          </span>
+        </div>
 
         <div className="flex items-center gap-2 mt-3">
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
@@ -234,7 +248,7 @@ export default function EventPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || formText.length === 0 || formText.length > 280}
           className="mt-3 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
         >
           {submitting ? "Submitting..." : "Submit Question"}
@@ -274,6 +288,12 @@ export default function EventPage() {
         <p className="text-yellow-600 text-xs mb-3">{error}</p>
       )}
 
+      {event && !event.isVotingOpen && (
+        <div className="mb-4 rounded-lg bg-gray-100 border border-gray-200 px-4 py-2 text-sm text-gray-600">
+          Voting is closed.
+        </div>
+      )}
+
       {/* Question list */}
       {sortedQuestions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400">
@@ -286,6 +306,7 @@ export default function EventPage() {
               key={q.id}
               question={q}
               onVote={handleVote}
+              votingOpen={event?.isVotingOpen ?? true}
             />
           ))}
         </ul>
@@ -297,9 +318,11 @@ export default function EventPage() {
 function QuestionCard({
   question,
   onVote,
+  votingOpen,
 }: {
   question: Question;
   onVote: (id: string, value: 1 | -1 | 0) => void;
+  votingOpen: boolean;
 }) {
   const { id, text, submittedName, isAnonymous, score, myVote, createdAt } = question;
 
@@ -308,9 +331,12 @@ function QuestionCard({
       {/* Vote column */}
       <div className="flex flex-col items-center gap-1 min-w-[2.5rem]">
         <button
-          onClick={() => onVote(id, 1)}
-          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors ${
-            myVote === 1
+          onClick={() => votingOpen && onVote(id, 1)}
+          disabled={!votingOpen}
+          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors disabled:cursor-not-allowed ${
+            !votingOpen
+              ? "bg-gray-100 text-gray-300"
+              : myVote === 1
               ? "bg-brand-700 text-white"
               : "bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-700"
           }`}
@@ -330,9 +356,12 @@ function QuestionCard({
           {score}
         </span>
         <button
-          onClick={() => onVote(id, -1)}
-          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors ${
-            myVote === -1
+          onClick={() => votingOpen && onVote(id, -1)}
+          disabled={!votingOpen}
+          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors disabled:cursor-not-allowed ${
+            !votingOpen
+              ? "bg-gray-100 text-gray-300"
+              : myVote === -1
               ? "bg-red-500 text-white"
               : "bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-500"
           }`}
