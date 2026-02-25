@@ -19,8 +19,8 @@ export default async function HomePage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-2">AMA Board</h1>
-      <p className="text-gray-500 mb-8">Select an active event to view and ask questions.</p>
+      <h1 className="text-3xl font-bold mb-2">Ask Paxos</h1>
+      <p className="text-gray-500 mb-8">Submit questions. Vote on what matters most.</p>
 
       {events.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400">
