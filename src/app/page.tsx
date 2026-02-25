@@ -6,14 +6,20 @@ import { LocalTime } from "./LocalTime";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function formatET(date: Date): string {
+function formatETDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatETTime(date: Date): string {
   return (
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
       hour: "numeric",
       minute: "2-digit",
     }).format(date) + " ET"
@@ -54,8 +60,10 @@ export default async function HomePage() {
                   <div className="text-gray-500 text-sm mt-1">{event.description}</div>
                 )}
                 {event.startsAt && (
-                  <div className="text-xs text-gray-400 mt-2 space-y-0.5">
-                    <div>{formatET(new Date(event.startsAt))}</div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    {formatETDate(new Date(event.startsAt))}
+                    {" · "}
+                    {formatETTime(new Date(event.startsAt))}
                     <LocalTime iso={event.startsAt.toISOString()} />
                   </div>
                 )}

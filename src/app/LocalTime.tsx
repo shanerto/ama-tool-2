@@ -8,9 +8,6 @@ export function LocalTime({ iso }: { iso: string }) {
   useEffect(() => {
     const d = new Date(iso);
     const formatted = d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
@@ -18,5 +15,5 @@ export function LocalTime({ iso }: { iso: string }) {
   }, [iso]);
 
   if (!label) return null;
-  return <span>{label} your time</span>;
+  return <span> / {label} local</span>;
 }
