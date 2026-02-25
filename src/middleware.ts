@@ -17,6 +17,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ── Presenter route protection (same auth as admin) ──────────────────────
+  if (pathname.startsWith("/presenter")) {
+    const token = request.cookies.get(ADMIN_COOKIE)?.value;
+    const isValid = token ? await verifySessionToken(token) : false;
+
+    if (!isValid) {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("from", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   // ── Voter ID cookie injection ────────────────────────────────────────────
   // Ensure every public request has a stable voter ID cookie so we can
   // attribute votes server-side without requiring a login.
