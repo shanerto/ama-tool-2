@@ -5,6 +5,7 @@
  */
 
 export const ADMIN_COOKIE = "ama_admin_session";
+export const SITE_COOKIE = "ama_site_session";
 const TOKEN_VALUE = "authenticated"; // what we sign
 
 function getSecret(): string {
@@ -55,4 +56,12 @@ export function verifyAdminPassword(password: string): boolean {
     throw new Error("ADMIN_PASSWORD env var is not set");
   }
   return password === adminPassword;
+}
+
+export function verifySitePassword(password: string): boolean {
+  const sitePassword = process.env.SITE_PASSWORD;
+  if (!sitePassword) {
+    throw new Error("SITE_PASSWORD env var is not set");
+  }
+  return password === sitePassword;
 }
