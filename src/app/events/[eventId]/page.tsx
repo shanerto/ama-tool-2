@@ -428,9 +428,8 @@ function EventTime({ startsAt }: { startsAt: string }) {
 
   return (
     <div className="mt-2 text-sm text-gray-500">
-      <p>{etDateStr}</p>
       <p>
-        {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}
+        {etDateStr} · {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}
       </p>
       {localTime && !viewerIsET && (
         <p className="text-gray-400">({localTime} your local time)</p>
