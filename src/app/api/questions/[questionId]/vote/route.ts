@@ -39,6 +39,18 @@ export async function POST(req: NextRequest, { params }: Params) {
     );
   }
 
+  // Check event voting is open
+  const event = await prisma.event.findUnique({
+    where: { id: question.eventId },
+    select: { isVotingOpen: true },
+  });
+  if (!event?.isVotingOpen) {
+    return NextResponse.json(
+      { error: "Voting is currently closed." },
+      { status: 403 }
+    );
+  }
+
   if (value === 0) {
     // Remove vote
     await prisma.vote.deleteMany({ where: { questionId, voterId } });

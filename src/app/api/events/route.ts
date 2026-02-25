@@ -7,7 +7,7 @@ export async function GET() {
   const events = await prisma.event.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "desc" },
-    select: { id: true, title: true, description: true, createdAt: true },
+    select: { id: true, title: true, description: true, startsAt: true, createdAt: true },
   });
   return NextResponse.json(events);
 }
@@ -23,13 +23,21 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const title = body?.title?.trim();
   const description = body?.description?.trim() || null;
+  const startsAtRaw = body?.startsAt;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
+  if (!startsAtRaw) {
+    return NextResponse.json({ error: "Event date/time is required" }, { status: 400 });
+  }
+  const startsAt = new Date(startsAtRaw);
+  if (isNaN(startsAt.getTime())) {
+    return NextResponse.json({ error: "Invalid event date/time" }, { status: 400 });
+  }
 
   const event = await prisma.event.create({
-    data: { title, description },
+    data: { title, description, startsAt },
   });
   return NextResponse.json(event, { status: 201 });
 }

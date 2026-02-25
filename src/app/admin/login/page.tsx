@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
@@ -29,7 +30,7 @@ function LoginForm() {
         setError(data.error ?? "Login failed");
         return;
       }
-      router.replace(from);
+      window.location.href = from;
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -42,6 +43,9 @@ function LoginForm() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-sm">
         <h1 className="text-xl font-bold mb-1">Admin Login</h1>
         <p className="text-sm text-gray-500 mb-6">AMA Board — Host Mode</p>
+        <Link href="/" className="text-xs text-brand-700 hover:underline block -mt-4 mb-6">
+          ← Back to events
+        </Link>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -55,7 +59,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               placeholder="Enter admin password"
             />
           </div>
@@ -65,7 +69,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="w-full bg-brand-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>

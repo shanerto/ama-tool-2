@@ -29,14 +29,40 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, isActive } = body;
-  if (!id || typeof isActive !== "boolean") {
-    return NextResponse.json({ error: "id and isActive are required" }, { status: 400 });
+  const { id, isActive, isVotingOpen } = body;
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  }
+  if (typeof isActive !== "boolean" && typeof isVotingOpen !== "boolean") {
+    return NextResponse.json(
+      { error: "isActive or isVotingOpen (boolean) is required" },
+      { status: 400 }
+    );
   }
 
-  const event = await prisma.event.update({
-    where: { id },
-    data: { isActive },
-  });
+  const data: { isActive?: boolean; isVotingOpen?: boolean } = {};
+  if (typeof isActive === "boolean") data.isActive = isActive;
+  if (typeof isVotingOpen === "boolean") data.isVotingOpen = isVotingOpen;
+
+  const event = await prisma.event.update({ where: { id }, data });
   return NextResponse.json(event);
+}
+
+// DELETE /api/admin/events — permanently delete an event (admin)
+// Body: { id }
+export async function DELETE(req: NextRequest) {
+  const token = req.cookies.get(ADMIN_COOKIE)?.value;
+  const isAdmin = token ? await verifySessionToken(token) : false;
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { id } = body;
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  }
+
+  await prisma.event.delete({ where: { id } });
+  return NextResponse.json({ success: true });
 }
