@@ -12,6 +12,31 @@ type Event = {
   _count: { questions: number };
 };
 
+// Convert a datetime-local string (e.g. "2026-03-06T10:30") treated as
+// America/New_York time into a UTC ISO string.
+// Handles DST by trying both ET offsets (-4 EDT, -5 EST) and verifying
+// the round-trip via Intl.
+function etLocalToUtcIso(dtLocalStr: string): string {
+  const [datePart, timePart] = dtLocalStr.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, m] = timePart.split(":").map(Number);
+
+  for (const offsetH of [4, 5]) {
+    const candidate = new Date(Date.UTC(y, mo - 1, d, h + offsetH, m));
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(candidate);
+    const ch = Number(parts.find((p) => p.type === "hour")?.value) % 24;
+    const cm = Number(parts.find((p) => p.type === "minute")?.value);
+    if (ch === h && cm === m) return candidate.toISOString();
+  }
+  // Fallback: assume EST (-5)
+  return new Date(Date.UTC(y, mo - 1, d, h + 5, m)).toISOString();
+}
+
 export default function AdminHomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +44,7 @@ export default function AdminHomePage() {
   // New event form
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [startsAt, setStartsAt] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -40,12 +66,21 @@ export default function AdminHomePage() {
       setCreateError("Title is required.");
       return;
     }
+    if (!startsAt) {
+      setCreateError("Event date/time is required.");
+      return;
+    }
+
     setCreating(true);
     try {
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: t, description: description.trim() || undefined }),
+        body: JSON.stringify({
+          title: t,
+          description: description.trim() || undefined,
+          startsAt: etLocalToUtcIso(startsAt),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -54,6 +89,7 @@ export default function AdminHomePage() {
       }
       setTitle("");
       setDescription("");
+      setStartsAt("");
       await fetchEvents();
     } catch {
       setCreateError("Network error.");
@@ -97,6 +133,18 @@ export default function AdminHomePage() {
           maxLength={500}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
+        <div className="mb-2">
+          <label className="block text-xs text-gray-500 mb-1">
+            Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
+          </label>
+          <input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+          />
+        </div>
         {createError && <p className="text-red-500 text-sm mb-2">{createError}</p>}
         <button
           type="submit"

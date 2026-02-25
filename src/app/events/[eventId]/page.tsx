@@ -20,6 +20,7 @@ type Event = {
   title: string;
   description: string | null;
   isVotingOpen: boolean;
+  startsAt: string | null;
 };
 
 type SortMode = "score" | "newest";
@@ -189,6 +190,7 @@ export default function EventPage() {
         {event?.description && (
           <p className="text-gray-500 text-sm mt-1">{event.description}</p>
         )}
+        {event?.startsAt && <EventTime startsAt={event.startsAt} />}
       </div>
 
       {/* Submit Form */}
@@ -383,5 +385,56 @@ function QuestionCard({
         </p>
       </div>
     </li>
+  );
+}
+
+// ── EventTime ────────────────────────────────────────────────────────────────
+// Displays the event's start time in ET plus the viewer's local time.
+// Local time is resolved after mount to avoid SSR/hydration mismatch.
+
+function EventTime({ startsAt }: { startsAt: string }) {
+  const date = new Date(startsAt);
+
+  const etDateStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+
+  const etTimeStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+
+  // Resolved after mount only — avoids server/client mismatch
+  const [localTime, setLocalTime] = useState<string | null>(null);
+  const [viewerIsET, setViewerIsET] = useState(false);
+
+  useEffect(() => {
+    const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setViewerIsET(viewerTz === "America/New_York");
+    setLocalTime(
+      new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(date)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startsAt]);
+
+  return (
+    <div className="mt-2 text-sm text-gray-500">
+      <p>{etDateStr}</p>
+      <p>
+        {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}
+      </p>
+      {localTime && !viewerIsET && (
+        <p className="text-gray-400">({localTime} your local time)</p>
+      )}
+    </div>
   );
 }

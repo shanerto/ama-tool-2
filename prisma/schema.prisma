@@ -14,6 +14,7 @@ model Event {
   description  String?
   isActive     Boolean    @default(true)
   isVotingOpen Boolean    @default(true)
+  startsAt     DateTime?
   createdAt    DateTime   @default(now())
   questions    Question[]
 

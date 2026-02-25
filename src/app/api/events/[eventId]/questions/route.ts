@@ -64,6 +64,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       title: event.title,
       description: event.description,
       isVotingOpen: event.isVotingOpen,
+      startsAt: event.startsAt,
     },
     questions: enriched,
   });
