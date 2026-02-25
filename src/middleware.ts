@@ -8,7 +8,9 @@ export async function middleware(request: NextRequest) {
   // ── Site-wide password protection ───────────────────────────────────────
   const isSiteAuthExempt =
     pathname === "/login" ||
-    pathname.startsWith("/api/site-auth");
+    pathname.startsWith("/api/site-auth") ||
+    pathname.startsWith("/public/") ||
+    /\.(png|jpg|jpeg|gif|svg|ico|webp)$/i.test(pathname);
 
   if (!isSiteAuthExempt) {
     const siteToken = request.cookies.get(SITE_COOKIE)?.value;
