@@ -274,78 +274,84 @@ export default function PresenterEventPage() {
         )}
       </div>
 
-      {/* Controls bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Sort toggle */}
-        <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-          {(["top", "newest"] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setSortMode(mode)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                sortMode === mode
-                  ? "bg-brand-700 text-white shadow"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              {mode === "top" ? "Top" : "Newest"}
-            </button>
-          ))}
-        </div>
-
-        {/* Auto-refresh toggle */}
-        <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-          {([true, false] as const).map((on) => (
-            <button
-              key={String(on)}
-              onClick={() => setAutoRefresh(on)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                autoRefresh === on
-                  ? "bg-gray-600 text-white shadow"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              {on ? "Auto" : "Manual"}
-            </button>
-          ))}
-        </div>
-
-        {/* Interval selector */}
-        {autoRefresh && (
+      {/* Controls bar — host-only, hidden during screen share via details/summary */}
+      <details className="mb-6 group">
+        <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors select-none w-fit list-none flex items-center gap-1">
+          <span className="group-open:hidden">⚙ Controls</span>
+          <span className="hidden group-open:inline">⚙ Controls</span>
+        </summary>
+        <div className="flex flex-wrap items-center gap-3 mt-3">
+          {/* Sort toggle */}
           <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-            {([3, 5, 10] as IntervalSec[]).map((s) => (
+            {(["top", "newest"] as const).map((mode) => (
               <button
-                key={s}
-                onClick={() => setIntervalSec(s)}
+                key={mode}
+                onClick={() => setSortMode(mode)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  sortMode === mode
+                    ? "bg-brand-700 text-white shadow"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                {mode === "top" ? "Top" : "Newest"}
+              </button>
+            ))}
+          </div>
+
+          {/* Auto-refresh toggle */}
+          <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+            {([true, false] as const).map((on) => (
+              <button
+                key={String(on)}
+                onClick={() => setAutoRefresh(on)}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  intervalSec === s
+                  autoRefresh === on
                     ? "bg-gray-600 text-white shadow"
                     : "text-gray-400 hover:text-gray-200"
                 }`}
               >
-                {s}s
+                {on ? "Auto" : "Manual"}
               </button>
             ))}
           </div>
-        )}
 
-        {/* Manual refresh */}
-        <button
-          onClick={fetchQuestions}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-          title="Refresh (r)"
-        >
-          ↺ Refresh
-        </button>
-
-        {/* Status */}
-        <span className="ml-auto text-xs text-gray-500">
-          {openQuestions.length} open
-          {lastRefreshed && (
-            <> · {relativeTime(lastRefreshed.toISOString())}</>
+          {/* Interval selector */}
+          {autoRefresh && (
+            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+              {([3, 5, 10] as IntervalSec[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setIntervalSec(s)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    intervalSec === s
+                      ? "bg-gray-600 text-white shadow"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  {s}s
+                </button>
+              ))}
+            </div>
           )}
-        </span>
-      </div>
+
+          {/* Manual refresh */}
+          <button
+            onClick={fetchQuestions}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            title="Refresh (r)"
+          >
+            ↺ Refresh
+          </button>
+
+          {/* Status */}
+          <span className="text-xs text-gray-500">
+            {openQuestions.length} open
+            {lastRefreshed && (
+              <> · {relativeTime(lastRefreshed.toISOString())}</>
+            )}
+          </span>
+        </div>
+      </details>
 
       {/* Undo toasts */}
       {undoEntries.length > 0 && (
@@ -439,10 +445,13 @@ export default function PresenterEventPage() {
                       e.stopPropagation();
                       markAnswered(q.id);
                     }}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-700 text-white hover:bg-brand-800 transition-colors whitespace-nowrap"
-                    title={isSelected ? "Mark answered (Enter)" : undefined}
+                    className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-700 text-white hover:bg-brand-800 transition-colors"
+                    title="Mark answered (Enter)"
+                    aria-label="Mark answered"
                   >
-                    Mark answered
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                    </svg>
                   </button>
                 </div>
               </li>
