@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_COOKIE, verifySessionToken } from "@/lib/auth";
+import { ADMIN_COOKIE, SITE_COOKIE, verifySessionToken } from "@/lib/auth";
 import { VOTER_COOKIE, generateVoterId } from "@/lib/voter";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ── Site-wide password protection ───────────────────────────────────────
+  const isSiteAuthExempt =
+    pathname === "/login" ||
+    pathname.startsWith("/api/site-auth") ||
+    pathname.startsWith("/public/") ||
+    /\.(png|jpg|jpeg|gif|svg|ico|webp)$/i.test(pathname);
+
+  if (!isSiteAuthExempt) {
+    const siteToken = request.cookies.get(SITE_COOKIE)?.value;
+    const siteValid = siteToken ? await verifySessionToken(siteToken) : false;
+
+    if (!siteValid) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("from", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
 
   // ── Admin route protection ──────────────────────────────────────────────
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
