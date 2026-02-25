@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { LocalTime } from "./LocalTime";
 
@@ -40,7 +41,10 @@ export default async function HomePage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-2">Ask Paxos</h1>
+      <div className="flex items-center gap-3 mb-2">
+        <Image src="/Question.png" alt="Ask Paxos logo" width={40} height={40} />
+        <h1 className="text-3xl font-bold">Ask Paxos</h1>
+      </div>
       <p className="text-gray-500 mb-8">Submit questions. Vote on what matters most.</p>
 
       {events.length === 0 ? (
