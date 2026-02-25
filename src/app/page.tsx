@@ -32,7 +32,7 @@ export default async function HomePage() {
             <li key={event.id}>
               <Link
                 href={`/events/${event.id}`}
-                className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all"
+                className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-brand-300 transition-all"
               >
                 <div className="font-semibold text-lg">{event.title}</div>
                 {event.description && (

@@ -181,7 +181,7 @@ export default function EventPage() {
     <main className="max-w-2xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        <Link href="/" className="text-sm text-indigo-600 hover:underline">
+        <Link href="/" className="text-sm text-brand-700 hover:underline">
           ← All Events
         </Link>
         <h1 className="text-2xl font-bold mt-2">{event?.title}</h1>
@@ -197,7 +197,7 @@ export default function EventPage() {
       >
         <h2 className="font-semibold mb-3">Ask a Question</h2>
         <textarea
-          className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-400"
           rows={3}
           placeholder="What's your question?"
           value={formText}
@@ -220,7 +220,7 @@ export default function EventPage() {
         {!isAnonymous && (
           <input
             type="text"
-            className="mt-2 w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="mt-2 w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             placeholder="Your name (required)"
             value={formName}
             onChange={(e) => setFormName(e.target.value)}
@@ -235,7 +235,7 @@ export default function EventPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="mt-3 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
         >
           {submitting ? "Submitting..." : "Submit Question"}
         </button>
@@ -311,8 +311,8 @@ function QuestionCard({
           onClick={() => onVote(id, 1)}
           className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors ${
             myVote === 1
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-100 text-gray-500 hover:bg-indigo-100 hover:text-indigo-600"
+              ? "bg-brand-700 text-white"
+              : "bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-700"
           }`}
           aria-label="Upvote"
         >
@@ -321,7 +321,7 @@ function QuestionCard({
         <span
           className={`text-sm font-bold transition-score ${
             score > 0
-              ? "text-indigo-600"
+              ? "text-brand-700"
               : score < 0
               ? "text-red-500"
               : "text-gray-500"
