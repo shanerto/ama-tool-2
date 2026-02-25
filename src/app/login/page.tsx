@@ -39,11 +39,11 @@ function LoginForm() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-slate-100 px-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex flex-col items-center gap-2 mb-2">
           <Image src="/Question.png" alt="Ask Paxos logo" width={36} height={36} />
           <h1 className="text-2xl font-bold tracking-tight">Ask Paxos</h1>
         </div>
-        <p className="text-sm text-gray-400 mb-6">Enter the password to continue.</p>
+        <p className="text-sm text-gray-400 mb-6 text-center">Enter the password to continue.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
