@@ -1,15 +1,30 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { LocalTime } from "./LocalTime";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function formatET(date: Date): string {
+  return (
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date) + " ET"
+  );
+}
 
 export default async function HomePage() {
   const events = await prisma.event.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "desc" },
-    select: { id: true, title: true, description: true, createdAt: true },
+    select: { id: true, title: true, description: true, startsAt: true },
   });
 
   // If exactly one active event, redirect there immediately
@@ -38,9 +53,12 @@ export default async function HomePage() {
                 {event.description && (
                   <div className="text-gray-500 text-sm mt-1">{event.description}</div>
                 )}
-                <div className="text-xs text-gray-400 mt-2">
-                  {new Date(event.createdAt).toLocaleDateString()}
-                </div>
+                {event.startsAt && (
+                  <div className="text-xs text-gray-400 mt-2 space-y-0.5">
+                    <div>{formatET(new Date(event.startsAt))}</div>
+                    <LocalTime iso={event.startsAt.toISOString()} />
+                  </div>
+                )}
               </Link>
             </li>
           ))}
