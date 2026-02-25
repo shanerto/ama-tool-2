@@ -64,6 +64,7 @@ export default function AdminHomePage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Edit event form
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -82,6 +83,13 @@ export default function AdminHomePage() {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function close() { setOpenMenuId(null); }
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [openMenuId]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -323,9 +331,9 @@ export default function AdminHomePage() {
                       {event._count.questions} question{event._count.questions !== 1 ? "s" : ""}
                     </p>
                   </div>
-                  <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                  <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
                     {confirmDeleteId === event.id ? (
-                      <>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => deleteEvent(event.id)}
                           disabled={deleting}
@@ -339,33 +347,48 @@ export default function AdminHomePage() {
                         >
                           Cancel
                         </button>
-                      </>
+                      </div>
                     ) : (
                       <>
-                        <Link
-                          href={`/admin/events/${event.id}`}
-                          className="px-3 py-1.5 text-xs bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 font-medium transition-colors"
-                        >
-                          Manage
-                        </Link>
                         <button
-                          onClick={() => startEdit(event)}
-                          className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                          onClick={() => setOpenMenuId(openMenuId === event.id ? null : event.id)}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+                          aria-label="Event actions"
                         >
-                          Edit
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+                          </svg>
                         </button>
-                        <button
-                          onClick={() => toggleActive(event)}
-                          className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
-                        >
-                          {event.isActive ? "Deactivate" : "Activate"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(event.id)}
-                          className="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors"
-                        >
-                          Delete
-                        </button>
+                        {openMenuId === event.id && (
+                          <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-gray-200 shadow-lg z-10 py-1">
+                            <Link
+                              href={`/admin/events/${event.id}`}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              onClick={() => setOpenMenuId(null)}
+                            >
+                              Manage
+                            </Link>
+                            <button
+                              onClick={() => { startEdit(event); setOpenMenuId(null); }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => { toggleActive(event); setOpenMenuId(null); }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              {event.isActive ? "Deactivate" : "Activate"}
+                            </button>
+                            <div className="my-1 border-t border-gray-100" />
+                            <button
+                              onClick={() => { setConfirmDeleteId(event.id); setOpenMenuId(null); }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
