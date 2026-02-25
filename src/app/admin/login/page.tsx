@@ -29,7 +29,7 @@ function LoginForm() {
         setError(data.error ?? "Login failed");
         return;
       }
-      router.replace(from);
+      window.location.href = from;
     } catch {
       setError("Network error. Please try again.");
     } finally {
