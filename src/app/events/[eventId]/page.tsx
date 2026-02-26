@@ -516,7 +516,7 @@ function ShareButton() {
       setTimeout(() => setCopyState("idle"), 1500);
     } catch {
       setCopyState("error");
-      setTimeout(() => setCopyState("idle"), 3000);
+      setTimeout(() => setCopyState("idle"), 2000);
     }
   }
 
@@ -547,9 +547,13 @@ function ShareButton() {
           </svg>
         )}
       </button>
-      {copyState === "error" && (
-        <p className="absolute top-full left-0 mt-1.5 text-xs text-red-500 whitespace-nowrap z-10 bg-white rounded px-1.5 py-1 shadow-sm border border-red-100">
-          Couldn&apos;t copy automatically. Please copy from the address bar.
+      {copyState !== "idle" && (
+        <p className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-xs whitespace-nowrap z-10 rounded-md px-2 py-1 pointer-events-none ${
+          copyState === "copied"
+            ? "bg-gray-800 text-white"
+            : "bg-red-50 text-red-600 border border-red-100"
+        }`}>
+          {copyState === "copied" ? "Link copied" : "Couldn\u2019t copy link"}
         </p>
       )}
     </div>
