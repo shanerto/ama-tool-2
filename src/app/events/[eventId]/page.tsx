@@ -310,8 +310,8 @@ export default function EventPage() {
                 <span className="text-xs font-medium text-gray-400">questions</span>
               </div>
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-xs text-gray-400 tabular-nums">{metrics.voteCount}</span>
-                <span className="text-xs text-gray-400">votes</span>
+                <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
+                <span className="text-xs text-gray-600">votes</span>
               </div>
             </div>
           )}
