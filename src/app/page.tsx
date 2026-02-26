@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ADMIN_COOKIE, SITE_COOKIE, verifySessionToken } from "@/lib/auth";
 import { LocalTime } from "./LocalTime";
 
 export const dynamic = "force-dynamic";
@@ -132,6 +134,13 @@ export default async function HomePage() {
   const companyEvents = events.filter((e) => e.type === "company");
   const teamEvents = events.filter((e) => e.type === "team");
 
+  const cookieStore = cookies();
+  const adminToken = cookieStore.get(ADMIN_COOKIE)?.value;
+  const siteToken = cookieStore.get(SITE_COOKIE)?.value;
+  const isAdmin = adminToken ? await verifySessionToken(adminToken) : false;
+  const isSiteLoggedIn = siteToken ? await verifySessionToken(siteToken) : false;
+  const showAdminLogin = isAdmin || !isSiteLoggedIn;
+
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
       {/* Header */}
@@ -191,15 +200,22 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Admin link — bottom of page, left-aligned with content */}
-      <div className="mt-12">
-        <Link
-          href="/admin"
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          Admin
-        </Link>
-      </div>
+      {/* Footer */}
+      <footer className="mt-16 border-t border-gray-100 pt-4">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
+          <span className="text-xs text-gray-400">
+            Ask Paxos · Built for thoughtful conversations
+          </span>
+          {showAdminLogin && (
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-400 hover:underline transition-colors"
+            >
+              Admin Login
+            </Link>
+          )}
+        </div>
+      </footer>
     </main>
   );
 }
