@@ -278,7 +278,10 @@ export default function EventPage() {
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
             {/* Left: title, host, description, date + inline stats */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold">{event.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold">{event.title}</h1>
+                <ShareButton />
+              </div>
               {event.hostName && (
                 <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
               )}
@@ -317,7 +320,10 @@ export default function EventPage() {
           /* ── Company event header (no controls, stats in right column) ── */
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold">{event?.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold">{event?.title}</h1>
+                <ShareButton />
+              </div>
               {event?.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
@@ -495,6 +501,57 @@ export default function EventPage() {
         </ul>
       )}
     </main>
+  );
+}
+
+// ── ShareButton ───────────────────────────────────────────────────────────────
+
+function ShareButton() {
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopyState("copied");
+      setTimeout(() => setCopyState("idle"), 1500);
+    } catch {
+      setCopyState("error");
+      setTimeout(() => setCopyState("idle"), 3000);
+    }
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        onClick={handleCopy}
+        title="Copy link"
+        aria-label="Copy link"
+        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+          copyState === "copied"
+            ? "bg-green-100 text-green-600"
+            : copyState === "error"
+            ? "bg-red-100 text-red-500"
+            : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+        }`}
+      >
+        {copyState === "copied" ? (
+          /* Checkmark */
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+            <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          /* Link / share icon */
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+            <path d="M7.22 10.22a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 0 0-1.06-1.06L9 7.38V2.75a.75.75 0 0 0-1.5 0v4.63L6.03 5.91a.75.75 0 0 0-1.06 1.06l2.25 2.25ZM3.5 9.75a.75.75 0 0 0-1.5 0V13a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 14 13V9.75a.75.75 0 0 0-1.5 0V13a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V9.75Z" />
+          </svg>
+        )}
+      </button>
+      {copyState === "error" && (
+        <p className="absolute top-full left-0 mt-1.5 text-xs text-red-500 whitespace-nowrap z-10 bg-white rounded px-1.5 py-1 shadow-sm border border-red-100">
+          Couldn&apos;t copy automatically. Please copy from the address bar.
+        </p>
+      )}
+    </div>
   );
 }
 
