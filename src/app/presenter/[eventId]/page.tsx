@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -58,21 +57,20 @@ export default function PresenterEventPage() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [intervalSec, setIntervalSec] = useState<IntervalSec>(5);
 
-  // Index-based keyboard navigation
+  // Index-based keyboard navigation (determines which question is on screen)
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   // IDs currently fading out before being removed
   const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
 
-
   // undoQueue: questionId -> { question, deadline }
   const [undoQueue, setUndoQueue] = useState<Record<string, UndoEntry>>({});
 
+  // Keyboard hint panel visibility (toggled with ?)
+  const [showHints, setShowHints] = useState(false);
+
   // Force re-render every 500ms to update relative times + undo countdowns
   const [, setTick] = useState(0);
-
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cardRefs = useRef<Record<string, HTMLLIElement | null>>({});
 
   // ── Derived: sorted open questions ──────────────────────────────────────
 
@@ -101,8 +99,6 @@ export default function PresenterEventPage() {
       const data = await res.json();
       setEvent(data.event);
       // Preserve local ANSWERED status for questions in the undo queue
-      // (they're optimistically hidden; don't let the poll re-show them
-      //  until undo window has expired or undo was clicked).
       setQuestions((prev) => {
         const prevById: Record<string, Question> = {};
         for (const q of prev) prevById[q.id] = q;
@@ -127,12 +123,12 @@ export default function PresenterEventPage() {
 
   // Polling
   useEffect(() => {
-    if (pollRef.current) clearInterval(pollRef.current);
+    let id: ReturnType<typeof setInterval> | null = null;
     if (autoRefresh) {
-      pollRef.current = setInterval(fetchQuestions, intervalSec * 1000);
+      id = setInterval(fetchQuestions, intervalSec * 1000);
     }
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (id) clearInterval(id);
     };
   }, [autoRefresh, intervalSec, fetchQuestions]);
 
@@ -217,27 +213,29 @@ export default function PresenterEventPage() {
     [questions]
   );
 
-  const undoAnswered = useCallback(async (questionId: string) => {
-    setUndoQueue((prev) => {
-      const next = { ...prev };
-      delete next[questionId];
-      return next;
-    });
+  const undoAnswered = useCallback(
+    async (questionId: string) => {
+      setUndoQueue((prev) => {
+        const next = { ...prev };
+        delete next[questionId];
+        return next;
+      });
 
-    // Optimistic: restore to OPEN
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === questionId ? { ...q, status: "OPEN" as const } : q
-      )
-    );
+      // Optimistic: restore to OPEN
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, status: "OPEN" as const } : q
+        )
+      );
 
-    try {
-      await fetch(`/api/questions/${questionId}/answer`, { method: "DELETE" });
-    } catch {
-      // Refetch on error to get consistent state
-      fetchQuestions();
-    }
-  }, [fetchQuestions]);
+      try {
+        await fetch(`/api/questions/${questionId}/answer`, { method: "DELETE" });
+      } catch {
+        fetchQuestions();
+      }
+    },
+    [fetchQuestions]
+  );
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────
 
@@ -261,6 +259,9 @@ export default function PresenterEventPage() {
       } else if (e.key === "r") {
         e.preventDefault();
         fetchQuestions();
+      } else if (e.key === "?") {
+        e.preventDefault();
+        setShowHints((prev) => !prev);
       }
     }
 
@@ -268,116 +269,67 @@ export default function PresenterEventPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [openQuestions, selectedIdx, markAnswered, fetchQuestions]);
 
-  // Scroll selected card into view
-  useEffect(() => {
-    const q = openQuestions[selectedIdx];
-    if (q?.id) {
-      cardRefs.current[q.id]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIdx]);
-
   // ── Render ───────────────────────────────────────────────────────────────
 
+  const activeQuestion = openQuestions[selectedIdx] ?? null;
+  const isFading = activeQuestion ? fadingIds.has(activeQuestion.id) : false;
   const undoEntries = Object.entries(undoQueue);
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-8">
-      {/* Event header */}
-      <div className="mb-6">
-        <h1 className="text-4xl font-bold text-white leading-tight">
-          {event?.title ?? (loading ? "Loading…" : "Event")}
-        </h1>
-        {event?.description && (
-          <p className="text-gray-400 mt-1 text-lg">{event.description}</p>
+    <main className="min-h-[calc(100vh-3rem)] flex flex-col max-w-5xl mx-auto px-12 py-14">
+
+      {/* Event title — secondary, muted */}
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-12">
+        {event?.title ?? (loading ? "Loading…" : "Event")}
+      </p>
+
+      {/* Single-question focal area */}
+      <div className="flex-1 flex flex-col justify-center min-h-0">
+        {loading ? (
+          <p className="text-gray-500 text-2xl py-24 text-center">Loading…</p>
+        ) : !activeQuestion ? (
+          <div className="py-24 text-center">
+            <p className="text-gray-400 text-2xl">No active question selected yet.</p>
+          </div>
+        ) : (
+          <div
+            className={`transition-all duration-300 ${
+              isFading ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100"
+            }`}
+          >
+            {activeQuestion.pinnedAt && (
+              <p className="text-brand-400 text-sm font-medium mb-5 flex items-center gap-1.5">
+                <span>📌</span> Pinned
+              </p>
+            )}
+
+            {/* Question text — focal point */}
+            <p className="text-5xl font-bold text-white leading-snug tracking-tight">
+              {activeQuestion.text}
+            </p>
+
+            <p className="text-base text-gray-500 mt-6">
+              {activeQuestion.isAnonymous
+                ? "Anonymous"
+                : (activeQuestion.submittedName ?? "Unknown")}
+              {" · "}
+              {relativeTime(activeQuestion.createdAt)}
+            </p>
+
+            <button
+              onClick={() => markAnswered(activeQuestion.id)}
+              className="mt-8 px-5 py-2 rounded-lg bg-brand-700 text-white text-sm font-medium hover:bg-brand-800 transition-colors"
+              title="Mark answered (Enter)"
+            >
+              ✓ Mark answered
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Controls bar — host-only, hidden during screen share via details/summary */}
-      <details className="mb-6 group">
-        <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors select-none w-fit list-none flex items-center gap-1">
-          <span className="group-open:hidden">⚙ Controls</span>
-          <span className="hidden group-open:inline">⚙ Controls</span>
-        </summary>
-        <div className="flex flex-wrap items-center gap-3 mt-3">
-          {/* Sort toggle */}
-          <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-            {(["top", "newest"] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setSortMode(mode)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  sortMode === mode
-                    ? "bg-brand-700 text-white shadow"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {mode === "top" ? "Top" : "Newest"}
-              </button>
-            ))}
-          </div>
-
-          {/* Auto-refresh toggle */}
-          <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-            {([true, false] as const).map((on) => (
-              <button
-                key={String(on)}
-                onClick={() => setAutoRefresh(on)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  autoRefresh === on
-                    ? "bg-gray-600 text-white shadow"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {on ? "Auto" : "Manual"}
-              </button>
-            ))}
-          </div>
-
-          {/* Interval selector */}
-          {autoRefresh && (
-            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-              {([3, 5, 10] as IntervalSec[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setIntervalSec(s)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    intervalSec === s
-                      ? "bg-gray-600 text-white shadow"
-                      : "text-gray-400 hover:text-gray-200"
-                  }`}
-                >
-                  {s}s
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Manual refresh */}
-          <button
-            onClick={fetchQuestions}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-            title="Refresh (r)"
-          >
-            ↺ Refresh
-          </button>
-
-          {/* Status */}
-          <span className="text-xs text-gray-500">
-            {openQuestions.length} open
-            {lastRefreshed && (
-              <> · {relativeTime(lastRefreshed.toISOString())}</>
-            )}
-          </span>
-        </div>
-      </details>
-
       {/* Undo toasts */}
       {undoEntries.length > 0 && (
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mt-8">
           {undoEntries.map(([qid, entry]) => {
             const secs = undoSecondsLeft(entry.deadline);
             return (
@@ -404,102 +356,109 @@ export default function PresenterEventPage() {
         </div>
       )}
 
-      {/* Question list */}
-      {loading ? (
-        <p className="text-gray-500 text-lg py-12 text-center">Loading…</p>
-      ) : openQuestions.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-700 py-16 text-center">
-          <p className="text-gray-500 text-lg">No open questions.</p>
-          <p className="text-gray-600 text-sm mt-1">
-            New questions will appear automatically.
-          </p>
-        </div>
-      ) : (
-        <ul className="space-y-4">
-          {openQuestions.map((q, idx) => {
-            const isSelected = idx === selectedIdx;
-            const isFading = fadingIds.has(q.id);
-            return (
-              <li
-                key={q.id}
-                ref={(el) => {
-                  cardRefs.current[q.id] = el;
-                }}
-                onClick={() => setSelectedIdx(idx)}
-                className={`rounded-xl p-5 flex gap-5 cursor-pointer transition-all duration-300 ${
-                  isFading ? "opacity-0 scale-95" : "opacity-100 scale-100"
-                } ${
-                  isSelected
-                    ? "bg-gray-800 ring-2 ring-brand-700 shadow-lg"
-                    : "bg-gray-900 border border-gray-800 hover:border-gray-600"
-                }`}
-              >
-                {/* Score */}
-                <div className="flex flex-col items-center min-w-[3.5rem] pt-1">
-                  <span
-                    className={`text-3xl font-bold tabular-nums leading-none ${
-                      q.score > 0
-                        ? "text-brand-400"
-                        : q.score < 0
-                        ? "text-red-400"
-                        : "text-gray-500"
+      {/* Footer — host controls only, hidden by default */}
+      <footer className="mt-10 pt-4 border-t border-gray-800">
+        <details className="group">
+          <summary className="cursor-pointer text-xs text-gray-600 hover:text-gray-400 transition-colors select-none list-none w-fit">
+            ⚙ Controls
+          </summary>
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            {/* Sort toggle */}
+            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+              {(["top", "newest"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setSortMode(mode)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    sortMode === mode
+                      ? "bg-brand-700 text-white shadow"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  {mode === "top" ? "Top" : "Newest"}
+                </button>
+              ))}
+            </div>
+
+            {/* Auto-refresh toggle */}
+            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+              {([true, false] as const).map((on) => (
+                <button
+                  key={String(on)}
+                  onClick={() => setAutoRefresh(on)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    autoRefresh === on
+                      ? "bg-gray-600 text-white shadow"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  {on ? "Auto" : "Manual"}
+                </button>
+              ))}
+            </div>
+
+            {/* Interval selector */}
+            {autoRefresh && (
+              <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+                {([3, 5, 10] as IntervalSec[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setIntervalSec(s)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      intervalSec === s
+                        ? "bg-gray-600 text-white shadow"
+                        : "text-gray-400 hover:text-gray-200"
                     }`}
                   >
-                    {q.score}
-                  </span>
-                  <span className="text-xs text-gray-600 mt-1">pts</span>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  {q.pinnedAt && (
-                    <span className="inline-block text-brand-400 text-sm mb-1" title="Pinned by host">📌 Pinned</span>
-                  )}
-                  <p className="text-xl font-medium text-white leading-snug">
-                    {q.text}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {q.isAnonymous
-                      ? "Anonymous"
-                      : (q.submittedName ?? "Unknown")}{" "}
-                    · {relativeTime(q.createdAt)}
-                  </p>
-                </div>
-
-                {/* Action */}
-                <div className="shrink-0 flex items-start pt-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markAnswered(q.id);
-                    }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-700 text-white hover:bg-brand-800 transition-colors"
-                    title="Mark answered (Enter)"
-                    aria-label="Mark answered"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                    </svg>
+                    {s}s
                   </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                ))}
+              </div>
+            )}
 
-      {/* Keyboard hint */}
-      {openQuestions.length > 0 && (
-        <p className="mt-8 text-xs text-gray-600 text-center">
-          <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">j</kbd>
-          {" / "}
-          <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">k</kbd>
-          {" navigate · "}
-          <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">Enter</kbd>
-          {" mark answered · "}
-          <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">r</kbd>
-          {" refresh"}
-        </p>
+            {/* Manual refresh */}
+            <button
+              onClick={fetchQuestions}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+              title="Refresh (r)"
+            >
+              ↺ Refresh
+            </button>
+
+            {/* Status */}
+            <span className="text-xs text-gray-500">
+              {openQuestions.length} open
+              {lastRefreshed && (
+                <> · {relativeTime(lastRefreshed.toISOString())}</>
+              )}
+            </span>
+          </div>
+        </details>
+      </footer>
+
+      {/* Keyboard hint panel — toggled with ? key, hidden by default */}
+      {showHints && (
+        <div className="fixed bottom-8 right-8 bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-xs text-gray-400 shadow-2xl space-y-2 z-50">
+          <p className="text-gray-300 font-medium mb-1">Keyboard shortcuts</p>
+          <p>
+            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">j</kbd>
+            {" / "}
+            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">k</kbd>
+            {" — navigate questions"}
+          </p>
+          <p>
+            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">Enter</kbd>
+            {" — mark answered"}
+          </p>
+          <p>
+            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">r</kbd>
+            {" — refresh"}
+          </p>
+          <p>
+            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">?</kbd>
+            {" — hide this panel"}
+          </p>
+        </div>
       )}
     </main>
   );
