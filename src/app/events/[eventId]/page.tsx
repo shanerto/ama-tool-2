@@ -60,6 +60,19 @@ export default function EventPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Per-question in-flight tracking. State drives button disabled UI;
+  // ref is readable inside async callbacks without stale-closure issues.
+  const [votingIds, setVotingIds] = useState<Set<string>>(new Set());
+  const votingIdsRef = useRef<Set<string>>(new Set());
+  function markVoting(id: string) {
+    votingIdsRef.current.add(id);
+    setVotingIds(new Set(votingIdsRef.current));
+  }
+  function clearVoting(id: string) {
+    votingIdsRef.current.delete(id);
+    setVotingIds(new Set(votingIdsRef.current));
+  }
+
   // Submission form state
   const [formText, setFormText] = useState("");
   const [formName, setFormName] = useState("");
@@ -118,7 +131,17 @@ export default function EventPage() {
       }
       const data = await res.json();
       setEvent(data.event);
-      setQuestions(data.questions);
+      // Merge poll results: preserve local optimistic state for any question
+      // whose vote request is still in flight so the UI doesn't flicker back.
+      setQuestions((local) => {
+        const localMap = new Map(local.map((q) => [q.id, q]));
+        return (data.questions as Question[]).map((serverQ) => {
+          if (votingIdsRef.current.has(serverQ.id)) {
+            return localMap.get(serverQ.id) ?? serverQ;
+          }
+          return serverQ;
+        });
+      });
       setMetrics(data.metrics ?? null);
       setError(null);
     } catch {
@@ -140,27 +163,45 @@ export default function EventPage() {
     };
   }, [fetchQuestions]);
 
-  async function handleVote(questionId: string, value: 1 | -1) {
-    // Capture the resolved value (toggle or switch) from inside the updater,
-    // which always receives the latest state — eliminating stale-closure bugs.
-    let finalValue: 1 | -1 | 0 = value;
+  async function handleVote(questionId: string, clicked: 1 | -1) {
+    // Guard: only one request per question at a time.
+    if (votingIdsRef.current.has(questionId)) return;
 
+    // ── Single source of truth: read current vote from rendered state ──────────
+    // Because we block re-entry above, `questions` is always current here.
+    const q = questions.find((q) => q.id === questionId);
+    if (!q) return;
+
+    const prev: -1 | 0 | 1 = (q.myVote ?? 0) as -1 | 0 | 1;
+    const next: -1 | 0 | 1 = clicked === prev ? 0 : clicked; // toggle or switch
+    const delta = next - prev;
+
+    console.log("[vote]", {
+      questionId,
+      prev,
+      next,
+      delta,
+      displayedScoreBefore: q.score,
+      displayedScoreAfter: q.score + delta,
+    });
+
+    // Disable buttons for this question while request is in flight.
+    markVoting(questionId);
+
+    // Optimistic update — applied exactly once with the correct delta.
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== questionId) return q;
-        const oldVote = q.myVote ?? 0;
-        const newVote: 1 | -1 | 0 = value === oldVote ? 0 : value;
-        finalValue = newVote;
-        const scoreDelta = newVote - oldVote;
-        return { ...q, score: q.score + scoreDelta, myVote: newVote === 0 ? null : newVote };
-      })
+      prev.map((q) =>
+        q.id !== questionId
+          ? q
+          : { ...q, score: q.score + delta, myVote: next === 0 ? null : next }
+      )
     );
 
     try {
       const res = await fetch(`/api/questions/${questionId}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value: finalValue }),
+        body: JSON.stringify({ value: next }), // resolved state, not raw click
       });
       if (res.ok) {
         const data = await res.json();
@@ -171,7 +212,15 @@ export default function EventPage() {
         );
       }
     } catch {
-      // Let poll reconcile
+      // Revert optimistic update on error; poll will reconcile next cycle.
+      const revertVote = prev === 0 ? null : prev;
+      setQuestions((qs) =>
+        qs.map((q) =>
+          q.id !== questionId ? q : { ...q, score: q.score - delta, myVote: revertVote }
+        )
+      );
+    } finally {
+      clearVoting(questionId);
     }
   }
 
@@ -507,6 +556,7 @@ export default function EventPage() {
               isNew={newIds.has(q.id)}
               onVote={handleVote}
               votingOpen={event?.isVotingOpen ?? true}
+              voteInFlight={votingIds.has(q.id)}
               isEditing={editingId === q.id}
               editText={editText}
               editError={editError}
@@ -609,6 +659,7 @@ function QuestionCard({
   isNew,
   onVote,
   votingOpen,
+  voteInFlight,
   isEditing,
   editText,
   editError,
@@ -623,6 +674,7 @@ function QuestionCard({
   isNew: boolean;
   onVote: (id: string, value: 1 | -1) => void;
   votingOpen: boolean;
+  voteInFlight: boolean;
   isEditing: boolean;
   editText: string;
   editError: string | null;
@@ -688,12 +740,12 @@ function QuestionCard({
       {/* Vote column — top-aligned with question text */}
       <div className="flex flex-col items-center gap-0.5 min-w-[1.75rem]">
         <button
-          onClick={() => votingOpen && onVote(id, 1)}
-          disabled={!votingOpen}
+          onClick={() => votingOpen && !voteInFlight && onVote(id, 1)}
+          disabled={!votingOpen || voteInFlight}
           aria-label={myVote === 1 ? "Remove upvote" : "Upvote"}
           title={myVote === 1 ? "Click to remove your upvote" : undefined}
           className={`p-1 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
-            !votingOpen
+            !votingOpen || voteInFlight
               ? "text-gray-200"
               : myVote === 1
               ? "text-brand-700 hover:text-brand-300"
@@ -716,12 +768,12 @@ function QuestionCard({
         </span>
 
         <button
-          onClick={() => votingOpen && onVote(id, -1)}
-          disabled={!votingOpen}
+          onClick={() => votingOpen && !voteInFlight && onVote(id, -1)}
+          disabled={!votingOpen || voteInFlight}
           aria-label={myVote === -1 ? "Remove downvote" : "Downvote"}
           title={myVote === -1 ? "Click to remove your downvote" : undefined}
           className={`p-1 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
-            !votingOpen
+            !votingOpen || voteInFlight
               ? "text-gray-200"
               : myVote === -1
               ? "text-red-400 hover:text-red-200"
