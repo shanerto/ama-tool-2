@@ -137,17 +137,17 @@ export default async function HomePage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         {/* Left: logo + text block as a horizontal pair */}
-        <div className="flex items-start gap-5">
+        <div className="flex items-start gap-3">
           <Image
             src="/Question.png"
             alt="Ask Paxos logo"
-            width={50}
-            height={50}
+            width={56}
+            height={56}
             className="shrink-0 mt-0.5"
           />
           <div>
-            <h1 className="text-4xl font-bold tracking-tight">Ask Paxos</h1>
-            <p className="text-gray-400 text-sm mt-1">Submit questions. Vote on what matters most.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Ask Paxos</h1>
+            <p className="text-gray-400 text-sm mt-0.5">Submit questions. Vote on what matters most.</p>
           </div>
         </div>
         <Link
