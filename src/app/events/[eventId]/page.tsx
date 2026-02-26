@@ -24,6 +24,8 @@ type Event = {
   description: string | null;
   isVotingOpen: boolean;
   startsAt: string | null;
+  type: "company" | "team";
+  hostName: string | null;
 };
 
 type SortMode = "score" | "newest";
@@ -268,11 +270,31 @@ export default function EventPage() {
         <Link href="/" className="text-sm text-brand-700 hover:underline">
           ← All Events
         </Link>
-        <h1 className="text-2xl font-bold mt-2">{event?.title}</h1>
-        {event?.description && (
-          <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+        <h1 className="text-2xl font-bold mt-4">{event?.title}</h1>
+        {event?.type === "team" && event?.hostName ? (
+          <>
+            <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
+            {event?.description && (
+              <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+            )}
+            {event?.startsAt && (
+              <div className="mt-4">
+                <EventTime startsAt={event.startsAt} />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {event?.description && (
+              <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+            )}
+            {event?.startsAt && (
+              <div className="mt-2">
+                <EventTime startsAt={event.startsAt} />
+              </div>
+            )}
+          </>
         )}
-        {event?.startsAt && <EventTime startsAt={event.startsAt} />}
       </div>
 
       {/* Submit Form */}
@@ -625,12 +647,12 @@ function EventTime({ startsAt }: { startsAt: string }) {
   }, [startsAt]);
 
   return (
-    <div className="mt-2 text-sm text-gray-500">
-      <p>
+    <div>
+      <p className="text-sm font-medium text-gray-600">
         {etDateStr} · {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}
       </p>
       {localTime && !viewerIsET && (
-        <p className="text-gray-400">({localTime} your local time)</p>
+        <p className="text-xs text-gray-400 mt-0.5">{localTime} local time</p>
       )}
     </div>
   );

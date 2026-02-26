@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, isActive, isVotingOpen, title, description, startsAt } = body;
+  const { id, isActive, isVotingOpen, title, description, startsAt, type, hostName } = body;
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
@@ -40,6 +40,8 @@ export async function PATCH(req: NextRequest) {
     title?: string;
     description?: string | null;
     startsAt?: Date | null;
+    type?: "company" | "team";
+    hostName?: string | null;
   } = {};
 
   if (typeof isActive === "boolean") data.isActive = isActive;
@@ -47,6 +49,12 @@ export async function PATCH(req: NextRequest) {
   if (typeof title === "string" && title.trim()) data.title = title.trim();
   if ("description" in body) data.description = description?.trim() || null;
   if ("startsAt" in body) data.startsAt = startsAt ? new Date(startsAt) : null;
+  if (type === "company" || type === "team") {
+    data.type = type;
+    // When switching to company, clear hostName; when switching to team keep existing
+    if (type === "company") data.hostName = null;
+  }
+  if ("hostName" in body) data.hostName = hostName?.trim() || null;
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

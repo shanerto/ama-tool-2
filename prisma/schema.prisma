@@ -9,14 +9,17 @@ datasource db {
 }
 
 model Event {
-  id           String     @id @default(cuid())
-  title        String
-  description  String?
-  isActive     Boolean    @default(true)
-  isVotingOpen Boolean    @default(true)
-  startsAt     DateTime?
-  createdAt    DateTime   @default(now())
-  questions    Question[]
+  id              String     @id @default(cuid())
+  title           String
+  description     String?
+  isActive        Boolean    @default(true)
+  isVotingOpen    Boolean    @default(true)
+  type            EventType  @default(team)
+  hostName        String?
+  createdByUserId String?
+  startsAt        DateTime?
+  createdAt       DateTime   @default(now())
+  questions       Question[]
 
   @@map("events")
 }
@@ -56,4 +59,9 @@ model Vote {
 enum Status {
   OPEN
   ANSWERED
+}
+
+enum EventType {
+  company
+  team
 }
