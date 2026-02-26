@@ -89,7 +89,7 @@ function EventCard({ event }: { event: EventRow }) {
 
 export default async function HomePage() {
   const rawEvents = await prisma.event.findMany({
-    where: { isActive: true },
+    where: { isActive: true, status: "OPEN" },
     orderBy: { startsAt: "asc" },
     select: {
       id: true,
@@ -204,12 +204,20 @@ export default async function HomePage() {
           <span className="text-xs text-gray-400">
             Ask Paxos · Built for thoughtful conversations
           </span>
-          <Link
-            href="/admin/login"
-            className="text-xs text-gray-400 hover:underline transition-colors"
-          >
-            Admin Login
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/past-events"
+              className="text-xs text-gray-400 hover:underline transition-colors"
+            >
+              View past events →
+            </Link>
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-400 hover:underline transition-colors"
+            >
+              Admin Login
+            </Link>
+          </div>
         </div>
       </footer>
     </main>

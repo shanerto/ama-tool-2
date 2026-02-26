@@ -8,6 +8,7 @@ type Event = {
   title: string;
   description: string | null;
   isActive: boolean;
+  status: "OPEN" | "CLOSED";
   startsAt: string | null;
   createdAt: string;
   type: "company" | "team";
@@ -69,6 +70,11 @@ export default function AdminHomePage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Close confirmation
+  const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   // Edit event form
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -205,6 +211,22 @@ export default function AdminHomePage() {
       body: JSON.stringify({ id: event.id, isActive: !event.isActive }),
     });
     await fetchEvents();
+  }
+
+  async function closeEvent(id: string) {
+    setClosing(true);
+    try {
+      await fetch("/api/admin/events", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "CLOSED" }),
+      });
+      setShowCloseModal(false);
+      setConfirmCloseId(null);
+      await fetchEvents();
+    } finally {
+      setClosing(false);
+    }
   }
 
   async function deleteEvent(id: string) {
@@ -395,6 +417,11 @@ export default function AdminHomePage() {
                       >
                         {event.isActive ? "Active" : "Inactive"}
                       </span>
+                      {event.status === "CLOSED" && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                          Closed
+                        </span>
+                      )}
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
                         {event.type === "company" ? "Company" : "Team"}
                       </span>
@@ -458,6 +485,22 @@ export default function AdminHomePage() {
                             >
                               {event.isActive ? "Deactivate" : "Activate"}
                             </button>
+                            {event.status === "OPEN" ? (
+                              <button
+                                onClick={() => {
+                                  setConfirmCloseId(event.id);
+                                  setShowCloseModal(true);
+                                  setOpenMenuId(null);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                Close event
+                              </button>
+                            ) : (
+                              <span className="flex items-center w-full px-4 py-2 text-sm text-gray-400 cursor-not-allowed">
+                                Event is closed
+                              </span>
+                            )}
                             <div className="my-1 border-t border-gray-100" />
                             <button
                               onClick={() => { setConfirmDeleteId(event.id); setOpenMenuId(null); }}
@@ -476,6 +519,71 @@ export default function AdminHomePage() {
           ))}
         </ul>
       )}
+
+      {/* Close event modal */}
+      {showCloseModal && confirmCloseId && (
+        <CloseEventModal
+          onCancel={() => { setShowCloseModal(false); setConfirmCloseId(null); }}
+          onConfirm={() => closeEvent(confirmCloseId)}
+          closing={closing}
+        />
+      )}
     </main>
+  );
+}
+
+// ── CloseEventModal ───────────────────────────────────────────────────────────
+
+function CloseEventModal({
+  onCancel,
+  onConfirm,
+  closing,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  closing: boolean;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="close-event-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 id="close-event-modal-title" className="text-base font-semibold text-gray-900">
+          Close event?
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          Closing this event will disable new questions and voting. This cannot be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={closing}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+            autoFocus
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={closing}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 disabled:opacity-50 transition-colors"
+          >
+            {closing ? "Closing..." : "Close Event"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

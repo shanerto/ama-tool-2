@@ -39,11 +39,17 @@ export async function POST(req: NextRequest, { params }: Params) {
     );
   }
 
-  // Check event voting is open
+  // Check event is not closed and voting is open
   const event = await prisma.event.findUnique({
     where: { id: question.eventId },
-    select: { isVotingOpen: true },
+    select: { isVotingOpen: true, status: true },
   });
+  if (event?.status === "CLOSED") {
+    return NextResponse.json(
+      { error: "This event is closed." },
+      { status: 403 }
+    );
+  }
   if (!event?.isVotingOpen) {
     return NextResponse.json(
       { error: "Voting is currently closed." },

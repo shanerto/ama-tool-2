@@ -17,7 +17,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const body = await req.json();
-  const { title, startsAt, hostName, description, isVotingOpen } = body;
+  const { title, startsAt, hostName, description, isVotingOpen, status } = body;
+
+  // Allow a close-only PATCH (no other fields required)
+  if (status === "CLOSED") {
+    const updated = await prisma.event.update({
+      where: { id: eventId },
+      data: { status: "CLOSED" },
+    });
+    return NextResponse.json(updated);
+  }
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });

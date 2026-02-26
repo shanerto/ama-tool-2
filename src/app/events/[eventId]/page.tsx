@@ -23,6 +23,7 @@ type Event = {
   title: string;
   description: string | null;
   isVotingOpen: boolean;
+  status: "OPEN" | "CLOSED";
   startsAt: string | null;
   type: "company" | "team";
   hostName: string | null;
@@ -354,8 +355,13 @@ export default function EventPage() {
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
             {/* Left: title, host, description, date + inline stats */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">{event.title}</h1>
+                {event.status === "CLOSED" && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                    Closed
+                  </span>
+                )}
                 <ShareButton />
               </div>
               {event.hostName && (
@@ -396,8 +402,13 @@ export default function EventPage() {
           /* ── Company event header (no controls, stats in right column) ── */
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">{event?.title}</h1>
+                {event?.status === "CLOSED" && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                    Closed
+                  </span>
+                )}
                 <ShareButton />
               </div>
               {event?.description && (
@@ -425,10 +436,15 @@ export default function EventPage() {
         )}
       </div>
 
-      {/* Submit Form */}
+      {/* Submit Form — hidden when event is closed */}
+      {event?.status === "CLOSED" && (
+        <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-500">
+          This event is closed. New questions are no longer accepted.
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8"
+        className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8${event?.status === "CLOSED" ? " hidden" : ""}`}
       >
         <h2 className="font-semibold mb-3">Ask a Question</h2>
         <div className="relative">
@@ -536,7 +552,7 @@ export default function EventPage() {
         <p className="text-yellow-600 text-xs mb-3">{error}</p>
       )}
 
-      {event && !event.isVotingOpen && (
+      {event && (event.status === "CLOSED" || !event.isVotingOpen) && (
         <div className="mb-4 rounded-lg bg-gray-100 border border-gray-200 px-4 py-2 text-sm text-gray-600">
           Voting is closed for this event.
         </div>
@@ -555,7 +571,7 @@ export default function EventPage() {
               question={q}
               isNew={newIds.has(q.id)}
               onVote={handleVote}
-              votingOpen={event?.isVotingOpen ?? true}
+              votingOpen={(event?.isVotingOpen ?? true) && event?.status !== "CLOSED"}
               voteInFlight={votingIds.has(q.id)}
               isEditing={editingId === q.id}
               editText={editText}

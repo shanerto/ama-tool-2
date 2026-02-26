@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, isActive, isVotingOpen, title, description, startsAt, type, hostName } = body;
+  const { id, isActive, isVotingOpen, status, title, description, startsAt, type, hostName } = body;
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
@@ -37,6 +37,7 @@ export async function PATCH(req: NextRequest) {
   const data: {
     isActive?: boolean;
     isVotingOpen?: boolean;
+    status?: "OPEN" | "CLOSED";
     title?: string;
     description?: string | null;
     startsAt?: Date | null;
@@ -46,6 +47,7 @@ export async function PATCH(req: NextRequest) {
 
   if (typeof isActive === "boolean") data.isActive = isActive;
   if (typeof isVotingOpen === "boolean") data.isVotingOpen = isVotingOpen;
+  if (status === "OPEN" || status === "CLOSED") data.status = status;
   if (typeof title === "string" && title.trim()) data.title = title.trim();
   if ("description" in body) data.description = description?.trim() || null;
   if ("startsAt" in body) data.startsAt = startsAt ? new Date(startsAt) : null;

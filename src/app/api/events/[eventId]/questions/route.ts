@@ -92,6 +92,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       title: event.title,
       description: event.description,
       isVotingOpen: event.isVotingOpen,
+      status: event.status,
       startsAt: event.startsAt,
       type: event.type,
       hostName: event.hostName,
@@ -119,6 +120,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   const event = await prisma.event.findUnique({ where: { id: eventId, isActive: true } });
   if (!event) {
     return NextResponse.json({ error: "Event not found or inactive" }, { status: 404 });
+  }
+  if (event.status === "CLOSED") {
+    return NextResponse.json({ error: "This event is closed." }, { status: 403 });
   }
 
   const body = await req.json();

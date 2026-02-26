@@ -51,12 +51,15 @@ export default function EditEventPage() {
   const [startsAt, setStartsAt] = useState("");
   const [hostName, setHostName] = useState("");
   const [isVotingOpen, setIsVotingOpen] = useState(true);
+  const [eventStatus, setEventStatus] = useState<"OPEN" | "CLOSED">("OPEN");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     async function loadEvent() {
@@ -77,6 +80,7 @@ export default function EditEventPage() {
         setHostName(event.hostName ?? "");
         setStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
         setIsVotingOpen(event.isVotingOpen ?? true);
+        setEventStatus(event.status ?? "OPEN");
       } catch {
         setNotFound(true);
       } finally {
@@ -96,11 +100,33 @@ export default function EditEventPage() {
         return;
       }
       router.push("/");
-      router.refresh(); // invalidate client router cache so homepage re-fetches from DB
+      router.refresh();
     } catch {
       alert("Network error. Please try again.");
     } finally {
       setDeleting(false);
+    }
+  }, [eventId, router]);
+
+  const handleClose = useCallback(async () => {
+    setClosing(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CLOSED" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Failed to close event.");
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setClosing(false);
     }
   }, [eventId, router]);
 
@@ -256,19 +282,51 @@ export default function EditEventPage() {
       </form>
 
       {/* Danger zone */}
-      <div className="mt-10 border-t border-gray-200 pt-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-1">Delete this event</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Permanently removes the event and all associated questions and votes. This cannot be undone.
-        </p>
-        <button
-          type="button"
-          onClick={() => setShowDeleteModal(true)}
-          className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-        >
-          Delete Event
-        </button>
+      <div className="mt-10 border-t border-gray-200 pt-6 space-y-6">
+        {/* Close event */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-1">Close this event</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Disables new questions and voting. Questions and votes are preserved. Cannot be undone.
+          </p>
+          {eventStatus === "OPEN" ? (
+            <button
+              type="button"
+              onClick={() => setShowCloseModal(true)}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              Close Event
+            </button>
+          ) : (
+            <span className="inline-block px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed">
+              Event is closed
+            </span>
+          )}
+        </div>
+
+        {/* Delete event */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-1">Delete this event</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Permanently removes the event and all associated questions and votes. This cannot be undone.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+          >
+            Delete Event
+          </button>
+        </div>
       </div>
+
+      {showCloseModal && (
+        <CloseModal
+          onCancel={() => setShowCloseModal(false)}
+          onConfirm={handleClose}
+          closing={closing}
+        />
+      )}
 
       {showDeleteModal && (
         <DeleteModal
@@ -278,6 +336,62 @@ export default function EditEventPage() {
         />
       )}
     </main>
+  );
+}
+
+// ── CloseModal ────────────────────────────────────────────────────────────────
+
+function CloseModal({
+  onCancel,
+  onConfirm,
+  closing,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  closing: boolean;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="close-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 id="close-modal-title" className="text-base font-semibold text-gray-900">
+          Close event?
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          Closing this event will disable new questions and voting. This cannot be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={closing}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+            autoFocus
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={closing}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 disabled:opacity-50 transition-colors"
+          >
+            {closing ? "Closing..." : "Close Event"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
