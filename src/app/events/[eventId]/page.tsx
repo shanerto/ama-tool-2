@@ -540,9 +540,10 @@ function ShareButton() {
             <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
           </svg>
         ) : (
-          /* Link / share icon */
+          /* Share icon — arrow pointing up out of a tray */
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-            <path d="M7.22 10.22a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 0 0-1.06-1.06L9 7.38V2.75a.75.75 0 0 0-1.5 0v4.63L6.03 5.91a.75.75 0 0 0-1.06 1.06l2.25 2.25ZM3.5 9.75a.75.75 0 0 0-1.5 0V13a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 14 13V9.75a.75.75 0 0 0-1.5 0V13a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V9.75Z" />
+            <path d="M8 2L5.25 5.5H7V11H9V5.5H10.75L8 2Z" />
+            <path d="M2.5 9.5V14H13.5V9.5H12V13H4V9.5Z" />
           </svg>
         )}
       </button>
