@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, useLayoutEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -77,10 +77,36 @@ export default function EventPage() {
   const [, setTick] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Track new question IDs for entry animation
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 5000);
     return () => clearInterval(id);
   }, []);
+
+  // Detect newly appeared questions and flag them for entry animation
+  useEffect(() => {
+    const fresh = new Set<string>();
+    for (const q of questions) {
+      if (!seenIdsRef.current.has(q.id)) {
+        // Only animate if we've already seen at least one batch (skip initial load)
+        if (seenIdsRef.current.size > 0) fresh.add(q.id);
+        seenIdsRef.current.add(q.id);
+      }
+    }
+    if (fresh.size === 0) return;
+    setNewIds((prev) => new Set(Array.from(prev).concat(Array.from(fresh))));
+    const timer = setTimeout(() => {
+      setNewIds((prev) => {
+        const next = new Set(prev);
+        fresh.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [questions]);
 
   const fetchQuestions = useCallback(async () => {
     try {
@@ -477,6 +503,7 @@ export default function EventPage() {
             <QuestionCard
               key={q.id}
               question={q}
+              isNew={newIds.has(q.id)}
               onVote={handleVote}
               votingOpen={event?.isVotingOpen ?? true}
               isEditing={editingId === q.id}
@@ -560,8 +587,25 @@ function ShareButton() {
   );
 }
 
+function ChevronUp() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 8L6 4L10 8" />
+    </svg>
+  );
+}
+
+function ChevronDown() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 4L6 8L10 4" />
+    </svg>
+  );
+}
+
 function QuestionCard({
   question,
+  isNew,
   onVote,
   votingOpen,
   isEditing,
@@ -575,6 +619,7 @@ function QuestionCard({
   onRetract,
 }: {
   question: Question;
+  isNew: boolean;
   onVote: (id: string, value: 1 | -1 | 0) => void;
   votingOpen: boolean;
   isEditing: boolean;
@@ -590,48 +635,97 @@ function QuestionCard({
   const { id, text, submittedName, isAnonymous, score, myVote, createdAt, isOwn, pinnedAt } = question;
   const withinEditWindow = isOwn && Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
 
+  // Entry animation: new cards slide up from 6px and fade in
+  const [entered, setEntered] = useState(!isNew);
+  const [highlight, setHighlight] = useState(isNew);
+  const [hovered, setHovered] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!isNew) return;
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setEntered(true))
+    );
+    return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!highlight) return;
+    const id = setTimeout(() => setHighlight(false), 80);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cardTransform = !entered
+    ? "translateY(6px)"
+    : hovered
+    ? "translateY(-1px)"
+    : "translateY(0)";
+
+  // Meta line: "Anonymous · Mar 14 · 9:49 PM"
+  const date = new Date(createdAt);
+  const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  const authorName = isAnonymous ? "Anonymous" : (submittedName ?? "Unknown");
+
   return (
-    <li className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4">
+    <li
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        opacity: entered ? 1 : 0,
+        transform: cardTransform,
+        backgroundColor: highlight ? "#f0fdf4" : "#ffffff",
+        boxShadow: hovered
+          ? "0 4px 14px rgba(0,0,0,0.09)"
+          : "0 1px 3px rgba(0,0,0,0.06)",
+        transition:
+          "opacity 250ms ease, transform 200ms ease, background-color 800ms ease, box-shadow 200ms ease",
+      }}
+      className="rounded-xl border border-gray-200 px-4 py-3.5 flex gap-4"
+    >
       {/* Vote column */}
-      <div className="flex flex-col items-center gap-1 min-w-[2.5rem]">
+      <div className="flex flex-col items-center gap-0.5 pt-0.5 min-w-[1.75rem]">
         <button
           onClick={() => votingOpen && onVote(id, 1)}
           disabled={!votingOpen}
-          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors disabled:cursor-not-allowed ${
-            !votingOpen
-              ? "bg-gray-100 text-gray-300"
-              : myVote === 1
-              ? "bg-brand-700 text-white"
-              : "bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-700"
-          }`}
           aria-label="Upvote"
-        >
-          ▲
-        </button>
-        <span
-          className={`text-sm font-bold transition-score ${
-            score > 0
+          className={`w-7 h-7 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
+            !votingOpen
+              ? "text-gray-200"
+              : myVote === 1
               ? "text-brand-700"
+              : "text-gray-300 hover:text-brand-700"
+          }`}
+        >
+          <ChevronUp />
+        </button>
+
+        <span
+          className={`text-[13px] font-semibold tabular-nums leading-none ${
+            score > 0
+              ? "text-brand-500"
               : score < 0
-              ? "text-red-500"
-              : "text-gray-500"
+              ? "text-red-400"
+              : "text-gray-400"
           }`}
         >
           {score}
         </span>
+
         <button
           onClick={() => votingOpen && onVote(id, -1)}
           disabled={!votingOpen}
-          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold transition-colors disabled:cursor-not-allowed ${
-            !votingOpen
-              ? "bg-gray-100 text-gray-300"
-              : myVote === -1
-              ? "bg-red-500 text-white"
-              : "bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-500"
-          }`}
           aria-label="Downvote"
+          className={`w-7 h-7 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
+            !votingOpen
+              ? "text-gray-200"
+              : myVote === -1
+              ? "text-red-400"
+              : "text-gray-300 hover:text-red-400"
+          }`}
         >
-          ▼
+          <ChevronDown />
         </button>
       </div>
 
@@ -673,18 +767,14 @@ function QuestionCard({
           </div>
         ) : (
           <>
-            <p className="text-sm text-gray-800 leading-relaxed">
+            <p className="text-[18px] font-medium leading-snug text-gray-900">
               {pinnedAt && (
                 <span className="inline-block mr-1.5 text-brand-700" title="Pinned by host">📌</span>
               )}
               {text}
             </p>
-            <p className="text-xs text-gray-400 mt-2">
-              {isAnonymous ? "Anonymous" : submittedName ?? "Unknown"} ·{" "}
-              {new Date(createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            <p className="text-xs text-gray-400 mt-1.5">
+              {authorName} · {dateStr} · {timeStr}
             </p>
           </>
         )}
