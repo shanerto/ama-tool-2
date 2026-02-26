@@ -55,6 +55,7 @@ export default function EventPage() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [metrics, setMetrics] = useState<{ questionCount: number; voteCount: number } | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("score");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +93,7 @@ export default function EventPage() {
       const data = await res.json();
       setEvent(data.event);
       setQuestions(data.questions);
+      setMetrics(data.metrics ?? null);
       setError(null);
     } catch {
       setError("Network error. Retrying...");
@@ -270,31 +272,50 @@ export default function EventPage() {
         <Link href="/" className="text-sm text-brand-700 hover:underline">
           ← All Events
         </Link>
-        <h1 className="text-2xl font-bold mt-4">{event?.title}</h1>
-        {event?.type === "team" && event?.hostName ? (
-          <>
-            <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
-            {event?.description && (
-              <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+        <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
+          {/* Left: title + meta */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold">{event?.title}</h1>
+            {event?.type === "team" && event?.hostName ? (
+              <>
+                <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
+                {event?.description && (
+                  <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+                )}
+                {event?.startsAt && (
+                  <div className="mt-4">
+                    <EventTime startsAt={event.startsAt} />
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {event?.description && (
+                  <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+                )}
+                {event?.startsAt && (
+                  <div className="mt-2">
+                    <EventTime startsAt={event.startsAt} />
+                  </div>
+                )}
+              </>
             )}
-            {event?.startsAt && (
-              <div className="mt-4">
-                <EventTime startsAt={event.startsAt} />
+          </div>
+
+          {/* Right: engagement metrics */}
+          {metrics && metrics.questionCount > 0 && (
+            <div className="shrink-0 self-start pt-1 space-y-0.5">
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
+                <span className="text-sm font-semibold text-gray-900">questions</span>
               </div>
-            )}
-          </>
-        ) : (
-          <>
-            {event?.description && (
-              <p className="text-gray-500 text-sm mt-1">{event.description}</p>
-            )}
-            {event?.startsAt && (
-              <div className="mt-2">
-                <EventTime startsAt={event.startsAt} />
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
+                <span className="text-xs text-gray-600">votes</span>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Submit Form */}
