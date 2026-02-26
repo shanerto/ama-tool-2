@@ -1,8 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_COOKIE, verifySessionToken } from "@/lib/auth";
 import { LocalTime } from "./LocalTime";
 
 export const dynamic = "force-dynamic";
@@ -66,10 +64,6 @@ function EventCard({ event }: { event: EventRow }) {
 }
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const adminToken = cookieStore.get(ADMIN_COOKIE)?.value;
-  const isAdmin = adminToken ? await verifySessionToken(adminToken) : false;
-
   const events = await prisma.event.findMany({
     where: { isActive: true },
     orderBy: { startsAt: "asc" },
@@ -138,17 +132,15 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Admin link — bottom-left, visible to admins only */}
-      {isAdmin && (
-        <div className="fixed bottom-5 left-5">
-          <Link
-            href="/admin"
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Admin
-          </Link>
-        </div>
-      )}
+      {/* Admin link — bottom-left, always visible */}
+      <div className="fixed bottom-5 left-5">
+        <Link
+          href="/admin"
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          Admin
+        </Link>
+      </div>
     </main>
   );
 }
