@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import VotingToggle from "@/components/VotingToggle";
 
 // Convert a datetime-local string (treated as America/New_York) to UTC ISO string.
 function etLocalToUtcIso(dtLocalStr: string): string {
@@ -234,34 +235,6 @@ export default function EditEventPage() {
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-xs text-gray-500 mb-2">Voting</label>
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-            <button
-              type="button"
-              onClick={() => setIsVotingOpen(true)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                isVotingOpen
-                  ? "bg-white shadow text-gray-900"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Open
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsVotingOpen(false)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                !isVotingOpen
-                  ? "bg-white shadow text-gray-900"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Closed
-            </button>
-          </div>
-        </div>
-
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
 
         <div className="flex gap-3">
@@ -280,6 +253,11 @@ export default function EditEventPage() {
           </Link>
         </div>
       </form>
+
+      {/* Voting toggle */}
+      <div className="mt-6">
+        <VotingToggle isOpen={isVotingOpen} onChange={setIsVotingOpen} />
+      </div>
 
       {/* Event actions */}
       <div className="mt-10 border-t border-gray-200 pt-6">
