@@ -96,6 +96,7 @@ export default function EditEventPage() {
         return;
       }
       router.push("/");
+      router.refresh(); // invalidate client router cache so homepage re-fetches from DB
     } catch {
       alert("Network error. Please try again.");
     } finally {

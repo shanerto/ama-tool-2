@@ -70,6 +70,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         return;
       }
       router.push("/");
+      router.refresh(); // invalidate client router cache so homepage re-fetches from DB
     } catch {
       setError("Network error. Please try again.");
     } finally {
