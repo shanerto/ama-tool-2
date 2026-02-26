@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { usePresenterTheme } from "../ThemeContext";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,8 @@ function undoSecondsLeft(deadline: number): number {
 
 export default function PresenterEventPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const { theme } = usePresenterTheme();
+  const dark = theme === "dark";
 
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -71,6 +74,36 @@ export default function PresenterEventPage() {
 
   // Force re-render every 500ms to update relative times + undo countdowns
   const [, setTick] = useState(0);
+
+  // ── Theme tokens ─────────────────────────────────────────────────────────
+
+  const T = {
+    eventTitle:     dark ? "text-gray-500"  : "text-gray-500",
+    loadingText:    dark ? "text-gray-500"  : "text-gray-500",
+    emptyText:      dark ? "text-gray-400"  : "text-gray-500",
+    pinned:         dark ? "text-brand-400" : "text-brand-600",
+    questionText:   dark ? "text-white"     : "text-gray-900",
+    questionCard:   dark ? ""               : "bg-white rounded-2xl shadow-md px-6 py-6 -mx-6",
+    metaText:       dark ? "text-gray-500"  : "text-gray-500",
+    undoToast:      dark ? "bg-gray-800 border-gray-700"         : "bg-white border-gray-200 shadow-sm",
+    undoText:       dark ? "text-gray-300"  : "text-gray-700",
+    undoItalic:     dark ? "text-gray-400"  : "text-gray-500",
+    undoBtn:        dark ? "text-brand-400 hover:text-brand-300" : "text-brand-600 hover:text-brand-700",
+    footerBorder:   dark ? "border-gray-800" : "border-gray-200",
+    summary:        dark ? "text-gray-600 hover:text-gray-400"   : "text-gray-400 hover:text-gray-600",
+    controlsBg:     dark ? "bg-gray-800"    : "bg-gray-100",
+    sortActive:     "bg-brand-700 text-white shadow",
+    sortInactive:   dark ? "text-gray-400 hover:text-gray-200"   : "text-gray-500 hover:text-gray-800",
+    toggleActive:   dark ? "bg-gray-600 text-white shadow"       : "bg-gray-300 text-gray-900 shadow",
+    toggleInactive: dark ? "text-gray-400 hover:text-gray-200"   : "text-gray-500 hover:text-gray-800",
+    manualRefresh:  dark
+      ? "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+      : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900",
+    statusText:     dark ? "text-gray-500"  : "text-gray-500",
+    hintPanel:      dark ? "bg-gray-900 border-gray-700 text-gray-400" : "bg-white border-gray-200 text-gray-600",
+    hintTitle:      dark ? "text-gray-300"  : "text-gray-700",
+    hintKbd:        dark ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-700",
+  };
 
   // ── Derived: sorted open questions ──────────────────────────────────────
 
@@ -279,17 +312,17 @@ export default function PresenterEventPage() {
     <main className="min-h-[calc(100vh-3rem)] flex flex-col max-w-5xl mx-auto px-12 py-14">
 
       {/* Event title — secondary, muted */}
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-12">
+      <p className={`text-xs font-semibold uppercase tracking-widest mb-12 ${T.eventTitle}`}>
         {event?.title ?? (loading ? "Loading…" : "Event")}
       </p>
 
       {/* Single-question focal area */}
       <div className="flex-1 flex flex-col justify-center min-h-0">
         {loading ? (
-          <p className="text-gray-500 text-2xl py-24 text-center">Loading…</p>
+          <p className={`text-2xl py-24 text-center ${T.loadingText}`}>Loading…</p>
         ) : !activeQuestion ? (
           <div className="py-24 text-center">
-            <p className="text-gray-400 text-2xl">No active question selected yet.</p>
+            <p className={`text-2xl ${T.emptyText}`}>No active question selected yet.</p>
           </div>
         ) : (
           <div
@@ -297,32 +330,35 @@ export default function PresenterEventPage() {
               isFading ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100"
             }`}
           >
-            {activeQuestion.pinnedAt && (
-              <p className="text-brand-400 text-sm font-medium mb-5 flex items-center gap-1.5">
-                <span>📌</span> Pinned
+            {/* Question card — gains subtle shadow in light mode */}
+            <div className={`transition-all duration-200 ${T.questionCard}`}>
+              {activeQuestion.pinnedAt && (
+                <p className={`text-sm font-medium mb-5 flex items-center gap-1.5 ${T.pinned}`}>
+                  <span>📌</span> Pinned
+                </p>
+              )}
+
+              {/* Question text — focal point */}
+              <p className={`text-5xl font-bold leading-snug tracking-tight ${T.questionText}`}>
+                {activeQuestion.text}
               </p>
-            )}
 
-            {/* Question text — focal point */}
-            <p className="text-5xl font-bold text-white leading-snug tracking-tight">
-              {activeQuestion.text}
-            </p>
+              <p className={`text-base mt-6 ${T.metaText}`}>
+                {activeQuestion.isAnonymous
+                  ? "Anonymous"
+                  : (activeQuestion.submittedName ?? "Unknown")}
+                {" · "}
+                {relativeTime(activeQuestion.createdAt)}
+              </p>
 
-            <p className="text-base text-gray-500 mt-6">
-              {activeQuestion.isAnonymous
-                ? "Anonymous"
-                : (activeQuestion.submittedName ?? "Unknown")}
-              {" · "}
-              {relativeTime(activeQuestion.createdAt)}
-            </p>
-
-            <button
-              onClick={() => markAnswered(activeQuestion.id)}
-              className="mt-8 px-5 py-2 rounded-lg bg-brand-700 text-white text-sm font-medium hover:bg-brand-800 transition-colors"
-              title="Mark answered (Enter)"
-            >
-              ✓ Mark answered
-            </button>
+              <button
+                onClick={() => markAnswered(activeQuestion.id)}
+                className="mt-8 px-5 py-2 rounded-lg bg-brand-700 text-white text-sm font-medium hover:bg-brand-800 transition-colors"
+                title="Mark answered (Enter)"
+              >
+                ✓ Mark answered
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -335,18 +371,18 @@ export default function PresenterEventPage() {
             return (
               <div
                 key={qid}
-                className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm"
+                className={`flex items-center justify-between border rounded-lg px-4 py-2.5 text-sm ${T.undoToast}`}
               >
-                <span className="text-gray-300 truncate mr-4 max-w-[70%]">
+                <span className={`truncate mr-4 max-w-[70%] ${T.undoText}`}>
                   Marked answered:{" "}
-                  <span className="text-gray-400 italic">
+                  <span className={`italic ${T.undoItalic}`}>
                     &ldquo;{entry.question.text.slice(0, 60)}
                     {entry.question.text.length > 60 ? "…" : ""}&rdquo;
                   </span>
                 </span>
                 <button
                   onClick={() => undoAnswered(qid)}
-                  className="shrink-0 text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                  className={`shrink-0 font-medium transition-colors ${T.undoBtn}`}
                 >
                   Undo ({secs}s)
                 </button>
@@ -357,22 +393,20 @@ export default function PresenterEventPage() {
       )}
 
       {/* Footer — host controls only, hidden by default */}
-      <footer className="mt-10 pt-4 border-t border-gray-800">
+      <footer className={`mt-10 pt-4 border-t ${T.footerBorder}`}>
         <details className="group">
-          <summary className="cursor-pointer text-xs text-gray-600 hover:text-gray-400 transition-colors select-none list-none w-fit">
+          <summary className={`cursor-pointer text-xs transition-colors select-none list-none w-fit ${T.summary}`}>
             ⚙ Controls
           </summary>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             {/* Sort toggle */}
-            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+            <div className={`flex gap-1 rounded-lg p-1 ${T.controlsBg}`}>
               {(["top", "newest"] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setSortMode(mode)}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    sortMode === mode
-                      ? "bg-brand-700 text-white shadow"
-                      : "text-gray-400 hover:text-gray-200"
+                    sortMode === mode ? T.sortActive : T.sortInactive
                   }`}
                 >
                   {mode === "top" ? "Top" : "Newest"}
@@ -381,15 +415,13 @@ export default function PresenterEventPage() {
             </div>
 
             {/* Auto-refresh toggle */}
-            <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+            <div className={`flex gap-1 rounded-lg p-1 ${T.controlsBg}`}>
               {([true, false] as const).map((on) => (
                 <button
                   key={String(on)}
                   onClick={() => setAutoRefresh(on)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    autoRefresh === on
-                      ? "bg-gray-600 text-white shadow"
-                      : "text-gray-400 hover:text-gray-200"
+                    autoRefresh === on ? T.toggleActive : T.toggleInactive
                   }`}
                 >
                   {on ? "Auto" : "Manual"}
@@ -399,15 +431,13 @@ export default function PresenterEventPage() {
 
             {/* Interval selector */}
             {autoRefresh && (
-              <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+              <div className={`flex gap-1 rounded-lg p-1 ${T.controlsBg}`}>
                 {([3, 5, 10] as IntervalSec[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => setIntervalSec(s)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      intervalSec === s
-                        ? "bg-gray-600 text-white shadow"
-                        : "text-gray-400 hover:text-gray-200"
+                      intervalSec === s ? T.toggleActive : T.toggleInactive
                     }`}
                   >
                     {s}s
@@ -419,14 +449,14 @@ export default function PresenterEventPage() {
             {/* Manual refresh */}
             <button
               onClick={fetchQuestions}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${T.manualRefresh}`}
               title="Refresh (r)"
             >
               ↺ Refresh
             </button>
 
             {/* Status */}
-            <span className="text-xs text-gray-500">
+            <span className={`text-xs ${T.statusText}`}>
               {openQuestions.length} open
               {lastRefreshed && (
                 <> · {relativeTime(lastRefreshed.toISOString())}</>
@@ -438,24 +468,24 @@ export default function PresenterEventPage() {
 
       {/* Keyboard hint panel — toggled with ? key, hidden by default */}
       {showHints && (
-        <div className="fixed bottom-8 right-8 bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-xs text-gray-400 shadow-2xl space-y-2 z-50">
-          <p className="text-gray-300 font-medium mb-1">Keyboard shortcuts</p>
+        <div className={`fixed bottom-8 right-8 border rounded-xl px-5 py-4 text-xs shadow-2xl space-y-2 z-50 ${T.hintPanel}`}>
+          <p className={`font-medium mb-1 ${T.hintTitle}`}>Keyboard shortcuts</p>
           <p>
-            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">j</kbd>
+            <kbd className={`px-1.5 py-0.5 rounded ${T.hintKbd}`}>j</kbd>
             {" / "}
-            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">k</kbd>
+            <kbd className={`px-1.5 py-0.5 rounded ${T.hintKbd}`}>k</kbd>
             {" — navigate questions"}
           </p>
           <p>
-            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">Enter</kbd>
+            <kbd className={`px-1.5 py-0.5 rounded ${T.hintKbd}`}>Enter</kbd>
             {" — mark answered"}
           </p>
           <p>
-            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">r</kbd>
+            <kbd className={`px-1.5 py-0.5 rounded ${T.hintKbd}`}>r</kbd>
             {" — refresh"}
           </p>
           <p>
-            <kbd className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-300">?</kbd>
+            <kbd className={`px-1.5 py-0.5 rounded ${T.hintKbd}`}>?</kbd>
             {" — hide this panel"}
           </p>
         </div>
