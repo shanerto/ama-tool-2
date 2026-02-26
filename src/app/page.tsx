@@ -71,12 +71,15 @@ function EventCard({ event }: { event: EventRow }) {
 
         {/* Right: engagement metrics */}
         {showMetrics && (
-          <div className="shrink-0 text-right self-center pl-2">
-            <div className="text-xl font-bold text-gray-700 leading-none tabular-nums">
-              {event.questionCount}
+          <div className="shrink-0 self-center pl-2 space-y-0.5">
+            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+              <span className="text-sm font-semibold text-gray-700 tabular-nums">{event.questionCount}</span>
+              <span className="text-xs font-medium text-gray-400">questions</span>
             </div>
-            <div className="text-xs text-gray-400 mt-0.5">questions</div>
-            <div className="text-xs text-gray-400 mt-1 tabular-nums">{event.voteCount} votes</div>
+            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+              <span className="text-xs text-gray-400 tabular-nums">{event.voteCount}</span>
+              <span className="text-xs text-gray-400">votes</span>
+            </div>
           </div>
         )}
       </div>

@@ -304,12 +304,15 @@ export default function EventPage() {
 
           {/* Right: engagement metrics */}
           {metrics && metrics.questionCount > 0 && (
-            <div className="shrink-0 text-right self-start pt-1">
-              <div className="text-2xl font-bold text-gray-700 leading-none tabular-nums">
-                {metrics.questionCount}
+            <div className="shrink-0 self-start pt-1 space-y-0.5">
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-sm font-semibold text-gray-700 tabular-nums">{metrics.questionCount}</span>
+                <span className="text-xs font-medium text-gray-400">questions</span>
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">questions</div>
-              <div className="text-xs text-gray-400 mt-1 tabular-nums">{metrics.voteCount} votes</div>
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-xs text-gray-400 tabular-nums">{metrics.voteCount}</span>
+                <span className="text-xs text-gray-400">votes</span>
+              </div>
             </div>
           )}
         </div>
