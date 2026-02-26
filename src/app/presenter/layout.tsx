@@ -1,14 +1,90 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ThemeProvider, usePresenterTheme } from "./ThemeContext";
 
+function SunIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="6" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+      <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+      <line x1="2" y1="12" x2="6" y2="12" />
+      <line x1="18" y1="12" x2="22" y2="12" />
+      <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+      <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, setTheme } = usePresenterTheme();
+  const dark = theme === "dark";
+  const [rotating, setRotating] = useState(false);
+
+  const handleToggle = () => {
+    setRotating(true);
+    setTheme(dark ? "light" : "dark");
+    setTimeout(() => setRotating(false), 180);
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      style={{
+        transform: rotating ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 180ms ease, opacity 150ms",
+      }}
+      className={`rounded p-1.5 ${
+        dark
+          ? "text-white hover:bg-gray-700"
+          : "text-gray-900 hover:bg-gray-200"
+      }`}
+    >
+      {dark ? <SunIcon /> : <MoonIcon />}
+    </button>
+  );
+}
+
 function PresenterLayoutInner({ children }: { children: ReactNode }) {
   const params = useParams();
   const eventId = params?.eventId as string | undefined;
-  const { theme, setTheme } = usePresenterTheme();
+  const { theme } = usePresenterTheme();
 
   const dark = theme === "dark";
 
@@ -46,24 +122,9 @@ function PresenterLayoutInner({ children }: { children: ReactNode }) {
           </Link>
         )}
 
-        {/* Theme toggle — top-right, icon-only */}
-        <div className="ml-auto flex items-center gap-0.5 rounded-md p-0.5">
-          {(["light", "dark"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTheme(t)}
-              aria-label={t === "light" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`rounded px-1.5 py-0.5 text-base leading-none transition-all duration-150 ${
-                theme === t
-                  ? dark
-                    ? "bg-gray-700 opacity-100"
-                    : "bg-gray-200 opacity-100"
-                  : "opacity-35 hover:opacity-65"
-              }`}
-            >
-              {t === "light" ? "🌞" : "🌙"}
-            </button>
-          ))}
+        {/* Theme toggle — top-right, single icon */}
+        <div className="ml-auto">
+          <ThemeToggle />
         </div>
       </header>
 
