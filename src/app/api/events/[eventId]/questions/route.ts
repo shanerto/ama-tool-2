@@ -76,6 +76,9 @@ export async function GET(req: NextRequest, { params }: Params) {
     });
   }
 
+  const questionCount = enriched.length;
+  const voteCount = questions.reduce((sum, q) => sum + q.votes.length, 0);
+
   return NextResponse.json({
     event: {
       id: event.id,
@@ -87,6 +90,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       hostName: event.hostName,
     },
     questions: enriched,
+    metrics: { questionCount, voteCount },
   });
 }
 
