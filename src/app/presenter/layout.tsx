@@ -30,7 +30,7 @@ function PresenterLayoutInner({ children }: { children: ReactNode }) {
             dark ? "text-gray-100" : "text-gray-700"
           }`}
         >
-          Presenter Mode
+          Ask Paxos
         </span>
 
         {eventId && (
