@@ -136,12 +136,19 @@ export default async function HomePage() {
     <main className="max-w-2xl mx-auto px-6 py-16">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Image src="/Question.png" alt="Ask Paxos logo" width={44} height={44} />
+        {/* Left: logo + text block as a horizontal pair */}
+        <div className="flex items-start gap-5">
+          <Image
+            src="/Question.png"
+            alt="Ask Paxos logo"
+            width={50}
+            height={50}
+            className="shrink-0 mt-0.5"
+          />
+          <div>
             <h1 className="text-4xl font-bold tracking-tight">Ask Paxos</h1>
+            <p className="text-gray-400 text-sm mt-1">Submit questions. Vote on what matters most.</p>
           </div>
-          <p className="text-gray-400 text-sm">Submit questions. Vote on what matters most.</p>
         </div>
         <Link
           href="/events/new"
