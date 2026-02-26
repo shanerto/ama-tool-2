@@ -24,6 +24,8 @@ type Event = {
   description: string | null;
   isVotingOpen: boolean;
   startsAt: string | null;
+  type: "company" | "team";
+  hostName: string | null;
 };
 
 type SortMode = "score" | "newest";
@@ -269,6 +271,9 @@ export default function EventPage() {
           ← All Events
         </Link>
         <h1 className="text-2xl font-bold mt-2">{event?.title}</h1>
+        {event?.type === "team" && event?.hostName && (
+          <p className="text-gray-400 text-sm mt-0.5">Hosted by {event.hostName}</p>
+        )}
         {event?.description && (
           <p className="text-gray-500 text-sm mt-1">{event.description}</p>
         )}

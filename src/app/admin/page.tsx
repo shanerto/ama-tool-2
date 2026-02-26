@@ -10,6 +10,8 @@ type Event = {
   isActive: boolean;
   startsAt: string | null;
   createdAt: string;
+  type: "company" | "team";
+  hostName: string | null;
   _count: { questions: number };
 };
 
@@ -60,6 +62,8 @@ export default function AdminHomePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
+  const [createType, setCreateType] = useState<"team" | "company">("team");
+  const [createHostName, setCreateHostName] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -71,6 +75,8 @@ export default function AdminHomePage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editStartsAt, setEditStartsAt] = useState("");
+  const [editType, setEditType] = useState<"team" | "company">("team");
+  const [editHostName, setEditHostName] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -104,6 +110,11 @@ export default function AdminHomePage() {
       return;
     }
 
+    if (createType === "team" && !createHostName.trim()) {
+      setCreateError("Host name is required for team events.");
+      return;
+    }
+
     setCreating(true);
     try {
       const res = await fetch("/api/events", {
@@ -113,6 +124,8 @@ export default function AdminHomePage() {
           title: t,
           description: description.trim() || undefined,
           startsAt: etLocalToUtcIso(startsAt),
+          type: createType,
+          hostName: createType === "team" ? createHostName.trim() : undefined,
         }),
       });
       const data = await res.json();
@@ -123,6 +136,8 @@ export default function AdminHomePage() {
       setTitle("");
       setDescription("");
       setStartsAt("");
+      setCreateType("team");
+      setCreateHostName("");
       await fetchEvents();
     } catch {
       setCreateError("Network error.");
@@ -136,6 +151,8 @@ export default function AdminHomePage() {
     setEditTitle(event.title);
     setEditDescription(event.description ?? "");
     setEditStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
+    setEditType(event.type);
+    setEditHostName(event.hostName ?? "");
     setEditError(null);
   }
 
@@ -144,6 +161,11 @@ export default function AdminHomePage() {
     const t = editTitle.trim();
     if (!t) {
       setEditError("Title is required.");
+      return;
+    }
+
+    if (editType === "team" && !editHostName.trim()) {
+      setEditError("Host name is required for team events.");
       return;
     }
 
@@ -158,6 +180,8 @@ export default function AdminHomePage() {
           title: t,
           description: editDescription.trim() || null,
           startsAt: editStartsAt ? etLocalToUtcIso(editStartsAt) : null,
+          type: editType,
+          hostName: editType === "team" ? editHostName.trim() : null,
         }),
       });
       const data = await res.json();
@@ -208,6 +232,17 @@ export default function AdminHomePage() {
         className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8"
       >
         <h2 className="font-semibold mb-3">Create New Event</h2>
+        <div className="mb-2">
+          <label className="block text-xs text-gray-500 mb-1">Event Type</label>
+          <select
+            value={createType}
+            onChange={(e) => setCreateType(e.target.value as "team" | "company")}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="team">Team Event</option>
+            <option value="company">Company Event</option>
+          </select>
+        </div>
         <input
           type="text"
           placeholder="Event title (required)"
@@ -236,6 +271,19 @@ export default function AdminHomePage() {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
         </div>
+        {createType === "team" && (
+          <div className="mb-2">
+            <label className="block text-xs text-gray-500 mb-1">Host Full Name</label>
+            <input
+              type="text"
+              placeholder="Host full name (required)"
+              value={createHostName}
+              onChange={(e) => setCreateHostName(e.target.value)}
+              maxLength={100}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+          </div>
+        )}
         {createError && <p className="text-red-500 text-sm mb-2">{createError}</p>}
         <button
           type="submit"
@@ -263,6 +311,17 @@ export default function AdminHomePage() {
               {editingId === event.id ? (
                 /* ── Inline edit form ── */
                 <div>
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">Event Type</label>
+                    <select
+                      value={editType}
+                      onChange={(e) => setEditType(e.target.value as "team" | "company")}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                    >
+                      <option value="team">Team Event</option>
+                      <option value="company">Company Event</option>
+                    </select>
+                  </div>
                   <input
                     type="text"
                     value={editTitle}
@@ -291,6 +350,19 @@ export default function AdminHomePage() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                     />
                   </div>
+                  {editType === "team" && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-500 mb-1">Host Full Name</label>
+                      <input
+                        type="text"
+                        value={editHostName}
+                        onChange={(e) => setEditHostName(e.target.value)}
+                        maxLength={100}
+                        placeholder="Host full name (required)"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                      />
+                    </div>
+                  )}
                   {editError && <p className="text-red-500 text-sm mb-2">{editError}</p>}
                   <div className="flex gap-2">
                     <button
@@ -312,7 +384,7 @@ export default function AdminHomePage() {
                 /* ── Normal event row ── */
                 <div className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{event.title}</span>
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -323,7 +395,13 @@ export default function AdminHomePage() {
                       >
                         {event.isActive ? "Active" : "Inactive"}
                       </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
+                        {event.type === "company" ? "Company" : "Team"}
+                      </span>
                     </div>
+                    {event.type === "team" && event.hostName && (
+                      <p className="text-xs text-gray-400 mt-0.5">Hosted by {event.hostName}</p>
+                    )}
                     {event.description && (
                       <p className="text-sm text-gray-500 mt-0.5">{event.description}</p>
                     )}
