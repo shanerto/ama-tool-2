@@ -297,6 +297,12 @@ export default function EventPage() {
             </div>
             {/* Right: Present (primary) + Manage (secondary) */}
             <div className="shrink-0 self-start flex items-center gap-2 pt-1">
+              <Link
+                href={`/events/${eventId}/edit`}
+                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                Manage
+              </Link>
               <a
                 href={`/presenter/${eventId}`}
                 target="_blank"
@@ -305,12 +311,6 @@ export default function EventPage() {
               >
                 Present
               </a>
-              <Link
-                href={`/events/${eventId}/edit`}
-                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                Manage
-              </Link>
             </div>
           </div>
         ) : (
