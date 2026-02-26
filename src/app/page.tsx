@@ -193,6 +193,14 @@ export default async function HomePage() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-4">
+                <Link
+                  href="/past-events"
+                  className="text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  View Past Events →
+                </Link>
+              </div>
             </section>
           )}
         </div>
@@ -204,20 +212,12 @@ export default async function HomePage() {
           <span className="text-xs text-gray-400">
             Ask Paxos · Built for thoughtful conversations
           </span>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/past-events"
-              className="text-xs text-gray-400 hover:underline transition-colors"
-            >
-              View past events →
-            </Link>
-            <Link
-              href="/admin/login"
-              className="text-xs text-gray-400 hover:underline transition-colors"
-            >
-              Admin Login
-            </Link>
-          </div>
+          <Link
+            href="/admin/login"
+            className="text-xs text-gray-400 hover:underline transition-colors"
+          >
+            Admin Login
+          </Link>
         </div>
       </footer>
     </main>
