@@ -50,6 +50,7 @@ export default function EditEventPage() {
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [hostName, setHostName] = useState("");
+  const [isVotingOpen, setIsVotingOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +76,7 @@ export default function EditEventPage() {
         setDescription(event.description ?? "");
         setHostName(event.hostName ?? "");
         setStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
+        setIsVotingOpen(event.isVotingOpen ?? true);
       } catch {
         setNotFound(true);
       } finally {
@@ -120,6 +122,7 @@ export default function EditEventPage() {
           description: description.trim() || null,
           startsAt: etLocalToUtcIso(startsAt),
           hostName: hostName.trim(),
+          isVotingOpen,
         }),
       });
       const data = await res.json();
@@ -202,6 +205,34 @@ export default function EditEventPage() {
             maxLength={100}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-xs text-gray-500 mb-2">Voting</label>
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+            <button
+              type="button"
+              onClick={() => setIsVotingOpen(true)}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                isVotingOpen
+                  ? "bg-white shadow text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Open
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsVotingOpen(false)}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                !isVotingOpen
+                  ? "bg-white shadow text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Closed
+            </button>
+          </div>
         </div>
 
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}

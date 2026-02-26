@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 type Params = { params: Promise<{ eventId: string }> };
 
 // PATCH /api/events/[eventId] — update a team event (no admin auth, guest-managed)
-// Body: { title, startsAt, hostName, description? }
+// Body: { title, startsAt, hostName, description?, isVotingOpen? }
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { eventId } = await params;
 
@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const body = await req.json();
-  const { title, startsAt, hostName, description } = body;
+  const { title, startsAt, hostName, description, isVotingOpen } = body;
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       startsAt: startsAtDate,
       hostName: hostName.trim(),
       description: description?.trim() || null,
+      ...(typeof isVotingOpen === "boolean" ? { isVotingOpen } : {}),
     },
   });
 
