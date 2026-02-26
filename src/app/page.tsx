@@ -132,8 +132,8 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Admin link — bottom-left, always visible */}
-      <div className="fixed bottom-5 left-5">
+      {/* Admin link — bottom of page, left-aligned with content */}
+      <div className="mt-12">
         <Link
           href="/admin"
           className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
