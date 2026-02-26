@@ -140,20 +140,21 @@ export default function EventPage() {
     };
   }, [fetchQuestions]);
 
-  async function handleVote(questionId: string, value: 1 | -1 | 0) {
+  async function handleVote(questionId: string, value: 1 | -1) {
+    // Capture the resolved value (toggle or switch) from inside the updater,
+    // which always receives the latest state — eliminating stale-closure bugs.
+    let finalValue: 1 | -1 | 0 = value;
+
     setQuestions((prev) =>
       prev.map((q) => {
         if (q.id !== questionId) return q;
         const oldVote = q.myVote ?? 0;
-        const newVote = value === oldVote ? 0 : value;
+        const newVote: 1 | -1 | 0 = value === oldVote ? 0 : value;
+        finalValue = newVote;
         const scoreDelta = newVote - oldVote;
-        return { ...q, score: q.score + scoreDelta, myVote: newVote === 0 ? null : (newVote as 1 | -1) };
+        return { ...q, score: q.score + scoreDelta, myVote: newVote === 0 ? null : newVote };
       })
     );
-
-    const question = questions.find((q) => q.id === questionId);
-    const currentVote = question?.myVote ?? 0;
-    const finalValue = value === currentVote ? 0 : value;
 
     try {
       const res = await fetch(`/api/questions/${questionId}/vote`, {
@@ -620,7 +621,7 @@ function QuestionCard({
 }: {
   question: Question;
   isNew: boolean;
-  onVote: (id: string, value: 1 | -1 | 0) => void;
+  onVote: (id: string, value: 1 | -1) => void;
   votingOpen: boolean;
   isEditing: boolean;
   editText: string;
@@ -682,7 +683,7 @@ function QuestionCard({
         transition:
           "opacity 250ms ease, transform 200ms ease, background-color 800ms ease, box-shadow 200ms ease",
       }}
-      className="rounded-xl border border-gray-200 px-4 py-3.5 flex gap-4"
+      className="rounded-xl border border-gray-200 px-4 py-3.5 flex items-center gap-4"
     >
       {/* Vote column — top-aligned with question text */}
       <div className="flex flex-col items-center gap-0.5 min-w-[1.75rem]">
