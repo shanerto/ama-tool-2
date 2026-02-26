@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_COOKIE, verifySessionToken } from "@/lib/auth";
-import { VOTER_COOKIE } from "@/lib/voter";
+import { VOTER_COOKIE, generateVoterId } from "@/lib/voter";
 
 type Params = { params: Promise<{ eventId: string }> };
 
@@ -12,7 +12,14 @@ export async function GET(req: NextRequest, { params }: Params) {
   const sortParam = req.nextUrl.searchParams.get("sort"); // "score" | "newest"
   const token = req.cookies.get(ADMIN_COOKIE)?.value;
   const isAdmin = token ? await verifySessionToken(token) : false;
-  const voterId = req.cookies.get(VOTER_COOKIE)?.value ?? null;
+  // Assign a stable voter ID on first visit so it exists before any vote
+  // request fires. Without this, a new user voting on two questions in
+  // quick succession would send both requests without a cookie, causing
+  // the server to generate two different voter IDs — allowing the same
+  // browser to cast two independent votes on the same question.
+  const existingVoterId = req.cookies.get(VOTER_COOKIE)?.value;
+  const voterId = existingVoterId ?? generateVoterId();
+  const isNewVoter = !existingVoterId;
 
   // Check event exists
   const event = await prisma.event.findUnique({ where: { id: eventId } });
@@ -79,7 +86,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const questionCount = enriched.length;
   const voteCount = questions.reduce((sum, q) => sum + q.votes.length, 0);
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     event: {
       id: event.id,
       title: event.title,
@@ -92,6 +99,17 @@ export async function GET(req: NextRequest, { params }: Params) {
     questions: enriched,
     metrics: { questionCount, voteCount },
   });
+
+  if (isNewVoter) {
+    res.cookies.set(VOTER_COOKIE, voterId, {
+      httpOnly: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+    });
+  }
+
+  return res;
 }
 
 // POST /api/events/[eventId]/questions — submit a question (public)
