@@ -684,17 +684,18 @@ function QuestionCard({
       }}
       className="rounded-xl border border-gray-200 px-4 py-3.5 flex gap-4"
     >
-      {/* Vote column */}
-      <div className="flex flex-col items-center gap-0.5 pt-0.5 min-w-[1.75rem]">
+      {/* Vote column — top-aligned with question text */}
+      <div className="flex flex-col items-center gap-0.5 min-w-[1.75rem]">
         <button
           onClick={() => votingOpen && onVote(id, 1)}
           disabled={!votingOpen}
-          aria-label="Upvote"
-          className={`w-7 h-7 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
+          aria-label={myVote === 1 ? "Remove upvote" : "Upvote"}
+          title={myVote === 1 ? "Click to remove your upvote" : undefined}
+          className={`p-1 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
             !votingOpen
               ? "text-gray-200"
               : myVote === 1
-              ? "text-brand-700"
+              ? "text-brand-700 hover:text-brand-300"
               : "text-gray-300 hover:text-brand-700"
           }`}
         >
@@ -716,12 +717,13 @@ function QuestionCard({
         <button
           onClick={() => votingOpen && onVote(id, -1)}
           disabled={!votingOpen}
-          aria-label="Downvote"
-          className={`w-7 h-7 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
+          aria-label={myVote === -1 ? "Remove downvote" : "Downvote"}
+          title={myVote === -1 ? "Click to remove your downvote" : undefined}
+          className={`p-1 flex items-center justify-center rounded transition-colors disabled:cursor-not-allowed ${
             !votingOpen
               ? "text-gray-200"
               : myVote === -1
-              ? "text-red-400"
+              ? "text-red-400 hover:text-red-200"
               : "text-gray-300 hover:text-red-400"
           }`}
         >
