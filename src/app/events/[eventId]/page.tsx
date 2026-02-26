@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 type Question = {
   id: string;
@@ -52,7 +52,6 @@ function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
 
 export default function EventPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const router = useRouter();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -60,10 +59,6 @@ export default function EventPage() {
   const [sortMode, setSortMode] = useState<SortMode>("score");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Team event management
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   // Submission form state
   const [formText, setFormText] = useState("");
@@ -150,23 +145,6 @@ export default function EventPage() {
       }
     } catch {
       // Let poll reconcile
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error ?? "Failed to delete event.");
-        return;
-      }
-      router.push("/");
-    } catch {
-      alert("Network error. Please try again.");
-    } finally {
-      setDeleting(false);
     }
   }
 
@@ -294,77 +272,75 @@ export default function EventPage() {
         <Link href="/" className="text-sm text-brand-700 hover:underline">
           ← All Events
         </Link>
-        <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
-          {/* Left: title + meta + team management controls */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold">{event?.title}</h1>
-            {event?.type === "team" && event?.hostName ? (
-              <>
+
+        {event?.type === "team" ? (
+          /* ── Team event header ── */
+          <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
+            {/* Left: title, host, description, date + inline stats */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold">{event.title}</h1>
+              {event.hostName && (
                 <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
-                {event?.description && (
-                  <p className="text-gray-500 text-sm mt-1">{event.description}</p>
-                )}
-                {event?.startsAt && (
-                  <div className="mt-4">
-                    <EventTime startsAt={event.startsAt} />
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {event?.description && (
-                  <p className="text-gray-500 text-sm mt-1">{event.description}</p>
-                )}
-                {event?.startsAt && (
-                  <div className="mt-2">
-                    <EventTime startsAt={event.startsAt} />
-                  </div>
-                )}
-              </>
-            )}
-            {/* Management controls — team events only, subtle inline links below meta */}
-            {event?.type === "team" && (
-              <p className="mt-3 flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
-                <a
-                  href={`/presenter/${eventId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-gray-700 hover:underline transition-colors"
-                >
-                  Presenter
-                </a>
-                <span aria-hidden="true">·</span>
-                <Link
-                  href={`/events/${eventId}/edit`}
-                  className="hover:text-gray-700 hover:underline transition-colors"
-                >
-                  Edit
-                </Link>
-                <span aria-hidden="true">·</span>
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="hover:text-red-600 hover:underline transition-colors"
-                >
-                  Delete
-                </button>
-              </p>
+              )}
+              {event.description && (
+                <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+              )}
+              {event.startsAt && (
+                <div className="mt-4">
+                  <EventTime
+                    startsAt={event.startsAt}
+                    questionCount={metrics?.questionCount}
+                    voteCount={metrics?.voteCount}
+                  />
+                </div>
+              )}
+            </div>
+            {/* Right: Present (primary) + Manage (secondary) */}
+            <div className="shrink-0 self-start flex items-center gap-2 pt-1">
+              <a
+                href={`/presenter/${eventId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-brand-700 text-white hover:bg-brand-800 transition-colors"
+              >
+                Present
+              </a>
+              <Link
+                href={`/events/${eventId}/edit`}
+                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                Manage
+              </Link>
+            </div>
+          </div>
+        ) : (
+          /* ── Company event header (no controls, stats in right column) ── */
+          <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold">{event?.title}</h1>
+              {event?.description && (
+                <p className="text-gray-500 text-sm mt-1">{event.description}</p>
+              )}
+              {event?.startsAt && (
+                <div className="mt-2">
+                  <EventTime startsAt={event.startsAt} />
+                </div>
+              )}
+            </div>
+            {metrics && metrics.questionCount > 0 && (
+              <div className="shrink-0 self-start pt-1 space-y-0.5 text-right">
+                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
+                  <span className="text-sm font-semibold text-gray-900">questions</span>
+                </div>
+                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                  <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
+                  <span className="text-xs text-gray-600">votes</span>
+                </div>
+              </div>
             )}
           </div>
-
-          {/* Right: engagement metrics — audience-facing, visually prominent */}
-          {metrics && metrics.questionCount > 0 && (
-            <div className="shrink-0 self-start pt-1 space-y-0.5 text-right">
-              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
-                <span className="text-sm font-semibold text-gray-900">questions</span>
-              </div>
-              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
-                <span className="text-xs text-gray-600">votes</span>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Submit Form */}
@@ -482,15 +458,6 @@ export default function EventPage() {
         <div className="mb-4 rounded-lg bg-gray-100 border border-gray-200 px-4 py-2 text-sm text-gray-600">
           Voting is closed.
         </div>
-      )}
-
-      {/* Delete confirmation modal */}
-      {showDeleteModal && (
-        <DeleteModal
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={handleDelete}
-          deleting={deleting}
-        />
       )}
 
       {/* Question list */}
@@ -690,66 +657,17 @@ function QuestionCard({
   );
 }
 
-// ── DeleteModal ───────────────────────────────────────────────────────────────
-
-function DeleteModal({
-  onCancel,
-  onConfirm,
-  deleting,
-}: {
-  onCancel: () => void;
-  onConfirm: () => void;
-  deleting: boolean;
-}) {
-  // Close on Escape key
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onCancel]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="delete-modal-title"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
-    >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 id="delete-modal-title" className="text-base font-semibold text-gray-900">
-          Delete event?
-        </h2>
-        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-          This will permanently remove the event and all associated questions and votes. This action cannot be undone.
-        </p>
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            disabled={deleting}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition-colors"
-            autoFocus
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={deleting}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
-            {deleting ? "Deleting..." : "Delete Event"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── EventTime ────────────────────────────────────────────────────────────────
 
-function EventTime({ startsAt }: { startsAt: string }) {
+function EventTime({
+  startsAt,
+  questionCount,
+  voteCount,
+}: {
+  startsAt: string;
+  questionCount?: number;
+  voteCount?: number;
+}) {
   const date = new Date(startsAt);
 
   const etDateStr = new Intl.DateTimeFormat("en-US", {
@@ -782,10 +700,16 @@ function EventTime({ startsAt }: { startsAt: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startsAt]);
 
+  // Build inline stats suffix — only when there are questions to show
+  const hasStats = questionCount !== undefined && questionCount > 0;
+  const statsStr = hasStats
+    ? ` · ${questionCount} ${questionCount === 1 ? "question" : "questions"} · ${voteCount ?? 0} ${(voteCount ?? 0) === 1 ? "vote" : "votes"}`
+    : "";
+
   return (
     <div>
       <p className="text-sm font-medium text-gray-600">
-        {etDateStr} · {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}
+        {etDateStr} · {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}{statsStr}
       </p>
       {localTime && !viewerIsET && (
         <p className="text-xs text-gray-400 mt-0.5">{localTime} local time</p>

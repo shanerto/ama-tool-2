@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useCallback, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -54,6 +54,8 @@ export default function EditEventPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadEvent() {
@@ -81,6 +83,23 @@ export default function EditEventPage() {
     }
     loadEvent();
   }, [eventId]);
+
+  const handleDelete = useCallback(async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Failed to delete event.");
+        return;
+      }
+      router.push("/");
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  }, [eventId, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -203,6 +222,85 @@ export default function EditEventPage() {
           </Link>
         </div>
       </form>
+
+      {/* Danger zone */}
+      <div className="mt-10 border-t border-gray-200 pt-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Delete this event</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Permanently removes the event and all associated questions and votes. This cannot be undone.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDeleteModal(true)}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+        >
+          Delete Event
+        </button>
+      </div>
+
+      {showDeleteModal && (
+        <DeleteModal
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          deleting={deleting}
+        />
+      )}
     </main>
+  );
+}
+
+// ── DeleteModal ───────────────────────────────────────────────────────────────
+
+function DeleteModal({
+  onCancel,
+  onConfirm,
+  deleting,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="delete-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 id="delete-modal-title" className="text-base font-semibold text-gray-900">
+          Delete event?
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          This will permanently remove the event and all associated questions and votes. This action cannot be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+            autoFocus
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {deleting ? "Deleting..." : "Delete Event"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
