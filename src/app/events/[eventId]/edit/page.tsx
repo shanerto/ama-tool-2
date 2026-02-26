@@ -281,42 +281,44 @@ export default function EditEventPage() {
         </div>
       </form>
 
-      {/* Danger zone */}
-      <div className="mt-10 border-t border-gray-200 pt-6 space-y-6">
-        {/* Close event */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-1">Close this event</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Disables new questions and voting. Questions and votes are preserved. Cannot be undone.
-          </p>
-          {eventStatus === "OPEN" ? (
+      {/* Event actions */}
+      <div className="mt-10 border-t border-gray-200 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-gray-200 rounded-xl overflow-hidden">
+          {/* Close event */}
+          <div className="bg-white px-5 py-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">Close this event</h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Disables new questions and voting. Data is preserved.
+            </p>
+            {eventStatus === "OPEN" ? (
+              <button
+                type="button"
+                onClick={() => setShowCloseModal(true)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                Close Event
+              </button>
+            ) : (
+              <span className="inline-block px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed">
+                Event is closed
+              </span>
+            )}
+          </div>
+
+          {/* Delete event */}
+          <div className="bg-white px-5 py-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">Delete this event</h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Permanently removes the event, questions, and votes.
+            </p>
             <button
               type="button"
-              onClick={() => setShowCloseModal(true)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
             >
-              Close Event
+              Delete Event
             </button>
-          ) : (
-            <span className="inline-block px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed">
-              Event is closed
-            </span>
-          )}
-        </div>
-
-        {/* Delete event */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-1">Delete this event</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Permanently removes the event and all associated questions and votes. This cannot be undone.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-          >
-            Delete Event
-          </button>
+          </div>
         </div>
       </div>
 
