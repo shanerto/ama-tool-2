@@ -416,18 +416,6 @@ export default function EventPage() {
                 </div>
               )}
             </div>
-            {metrics && metrics.questionCount > 0 && (
-              <div className="shrink-0 self-start pt-1 space-y-0.5 text-right">
-                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
-                  <span className="text-sm font-semibold text-gray-900">questions</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                  <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
-                  <span className="text-xs text-gray-600">votes</span>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -519,7 +507,7 @@ export default function EventPage() {
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-gray-700">
           {sortedQuestions.length} question{sortedQuestions.length !== 1 ? "s" : ""}
-          {event?.type === "team" && metrics && metrics.voteCount > 0 && (
+          {metrics && metrics.voteCount > 0 && (
             <span className="text-gray-400 font-normal"> · {metrics.voteCount} vote{metrics.voteCount !== 1 ? "s" : ""}</span>
           )}
         </span>
