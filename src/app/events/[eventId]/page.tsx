@@ -306,8 +306,8 @@ export default function EventPage() {
           {metrics && metrics.questionCount > 0 && (
             <div className="shrink-0 self-start pt-1 space-y-0.5">
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-sm font-semibold text-gray-700 tabular-nums">{metrics.questionCount}</span>
-                <span className="text-xs font-medium text-gray-400">questions</span>
+                <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
+                <span className="text-sm font-semibold text-gray-900">questions</span>
               </div>
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
                 <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
