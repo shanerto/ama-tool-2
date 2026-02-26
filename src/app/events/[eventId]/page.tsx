@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type Question = {
   id: string;
@@ -52,6 +52,7 @@ function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
 
 export default function EventPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const router = useRouter();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -59,6 +60,10 @@ export default function EventPage() {
   const [sortMode, setSortMode] = useState<SortMode>("score");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Team event management
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Submission form state
   const [formText, setFormText] = useState("");
@@ -145,6 +150,23 @@ export default function EventPage() {
       }
     } catch {
       // Let poll reconcile
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Failed to delete event.");
+        return;
+      }
+      router.push("/");
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -302,19 +324,47 @@ export default function EventPage() {
             )}
           </div>
 
-          {/* Right: engagement metrics */}
-          {metrics && metrics.questionCount > 0 && (
-            <div className="shrink-0 self-start pt-1 space-y-0.5">
-              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
-                <span className="text-sm font-semibold text-gray-900">questions</span>
+          {/* Right: team controls + engagement metrics */}
+          <div className="shrink-0 self-start flex flex-col items-end gap-2 pt-1">
+            {/* Management controls — team events only */}
+            {event?.type === "team" && (
+              <div className="flex items-center gap-1.5">
+                <Link
+                  href={`/events/${eventId}/edit`}
+                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  Edit
+                </Link>
+                <a
+                  href={`/presenter/${eventId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-brand-50 text-brand-700 hover:bg-brand-100 transition-colors"
+                >
+                  Presenter
+                </a>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                >
+                  Delete
+                </button>
               </div>
-              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
-                <span className="text-xs text-gray-600">votes</span>
+            )}
+            {/* Engagement metrics */}
+            {metrics && metrics.questionCount > 0 && (
+              <div className="space-y-0.5 text-right">
+                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
+                  <span className="text-sm font-semibold text-gray-900">questions</span>
+                </div>
+                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                  <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
+                  <span className="text-xs text-gray-600">votes</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -433,6 +483,15 @@ export default function EventPage() {
         <div className="mb-4 rounded-lg bg-gray-100 border border-gray-200 px-4 py-2 text-sm text-gray-600">
           Voting is closed.
         </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <DeleteModal
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          deleting={deleting}
+        />
       )}
 
       {/* Question list */}
@@ -629,6 +688,63 @@ function QuestionCard({
         </div>
       )}
     </li>
+  );
+}
+
+// ── DeleteModal ───────────────────────────────────────────────────────────────
+
+function DeleteModal({
+  onCancel,
+  onConfirm,
+  deleting,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}) {
+  // Close on Escape key
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="delete-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 id="delete-modal-title" className="text-base font-semibold text-gray-900">
+          Delete event?
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          This will permanently remove the event and all associated questions and votes. This action cannot be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+            autoFocus
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {deleting ? "Deleting..." : "Delete Event"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
