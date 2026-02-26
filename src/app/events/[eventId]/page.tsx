@@ -372,11 +372,7 @@ export default function EventPage() {
               )}
               {event.startsAt && (
                 <div className="mt-4">
-                  <EventTime
-                    startsAt={event.startsAt}
-                    questionCount={metrics?.questionCount}
-                    voteCount={metrics?.voteCount}
-                  />
+                  <EventTime startsAt={event.startsAt} />
                 </div>
               )}
             </div>
@@ -523,6 +519,9 @@ export default function EventPage() {
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-gray-700">
           {sortedQuestions.length} question{sortedQuestions.length !== 1 ? "s" : ""}
+          {event?.type === "team" && metrics && metrics.voteCount > 0 && (
+            <span className="text-gray-400 font-normal"> · {metrics.voteCount} vote{metrics.voteCount !== 1 ? "s" : ""}</span>
+          )}
         </span>
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           <button
