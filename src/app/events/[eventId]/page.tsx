@@ -295,7 +295,7 @@ export default function EventPage() {
           ← All Events
         </Link>
         <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
-          {/* Left: title + meta */}
+          {/* Left: title + meta + team management controls */}
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold">{event?.title}</h1>
             {event?.type === "team" && event?.hostName ? (
@@ -322,49 +322,48 @@ export default function EventPage() {
                 )}
               </>
             )}
-          </div>
-
-          {/* Right: team controls + engagement metrics */}
-          <div className="shrink-0 self-start flex flex-col items-end gap-2 pt-1">
-            {/* Management controls — team events only */}
+            {/* Management controls — team events only, subtle inline links below meta */}
             {event?.type === "team" && (
-              <div className="flex items-center gap-1.5">
-                <Link
-                  href={`/events/${eventId}/edit`}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                >
-                  Edit
-                </Link>
+              <p className="mt-3 flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
                 <a
                   href={`/presenter/${eventId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-brand-50 text-brand-700 hover:bg-brand-100 transition-colors"
+                  className="hover:text-gray-700 hover:underline transition-colors"
                 >
                   Presenter
                 </a>
+                <span aria-hidden="true">·</span>
+                <Link
+                  href={`/events/${eventId}/edit`}
+                  className="hover:text-gray-700 hover:underline transition-colors"
+                >
+                  Edit
+                </Link>
+                <span aria-hidden="true">·</span>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                  className="hover:text-red-600 hover:underline transition-colors"
                 >
                   Delete
                 </button>
-              </div>
-            )}
-            {/* Engagement metrics */}
-            {metrics && metrics.questionCount > 0 && (
-              <div className="space-y-0.5 text-right">
-                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
-                  <span className="text-sm font-semibold text-gray-900">questions</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                  <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
-                  <span className="text-xs text-gray-600">votes</span>
-                </div>
-              </div>
+              </p>
             )}
           </div>
+
+          {/* Right: engagement metrics — audience-facing, visually prominent */}
+          {metrics && metrics.questionCount > 0 && (
+            <div className="shrink-0 self-start pt-1 space-y-0.5 text-right">
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-sm font-semibold text-gray-900 tabular-nums">{metrics.questionCount}</span>
+                <span className="text-sm font-semibold text-gray-900">questions</span>
+              </div>
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-xs text-gray-600 tabular-nums">{metrics.voteCount}</span>
+                <span className="text-xs text-gray-600">votes</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

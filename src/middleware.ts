@@ -35,17 +35,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Presenter route protection (same auth as admin) ──────────────────────
-  if (pathname.startsWith("/presenter")) {
-    const token = request.cookies.get(ADMIN_COOKIE)?.value;
-    const isValid = token ? await verifySessionToken(token) : false;
-
-    if (!isValid) {
-      const loginUrl = new URL("/admin/login", request.url);
-      loginUrl.searchParams.set("from", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+  // Presenter routes are intentionally public — no admin auth required.
+  // Any employee with the link can open presenter mode.
 
   // ── Voter ID cookie injection ────────────────────────────────────────────
   // Ensure every public request has a stable voter ID cookie so we can
