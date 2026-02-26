@@ -299,7 +299,7 @@ export default function EventPage() {
             <div className="shrink-0 self-start flex items-center gap-2 pt-1">
               <Link
                 href={`/events/${eventId}/edit`}
-                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
               >
                 Manage
               </Link>
