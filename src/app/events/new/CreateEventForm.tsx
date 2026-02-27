@@ -153,10 +153,9 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             Date &amp; Time{" "}
-            <span className="text-gray-400 font-normal">*</span>
+            <span className="text-gray-400 font-normal">* · Eastern Time (ET)</span>
           </label>
           <DateTimePicker value={startsAt} onChange={setStartsAt} required />
-          <p className="text-xs text-gray-400 mt-1.5">Saved in Eastern Time (ET).</p>
         </div>
 
         {/* Host name — team events only */}
