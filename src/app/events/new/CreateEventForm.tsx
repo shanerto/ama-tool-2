@@ -182,14 +182,14 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             Visibility
           </label>
-          <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => setIsPublic(true)}
-              className={`flex-1 px-3 py-2 text-center transition-colors ${
+              className={`flex-1 px-3 py-1.5 text-center rounded-md text-sm font-medium transition-all ${
                 isPublic
-                  ? "bg-brand-700 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Public
@@ -197,10 +197,10 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
             <button
               type="button"
               onClick={() => setIsPublic(false)}
-              className={`flex-1 px-3 py-2 text-center border-l border-gray-300 transition-colors ${
+              className={`flex-1 px-3 py-1.5 text-center rounded-md text-sm font-medium transition-all ${
                 !isPublic
-                  ? "bg-brand-700 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Private
@@ -213,15 +213,9 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           </p>
         </div>
 
-        {/* Error — reserve height to prevent layout shift */}
-        <div className="min-h-[1.25rem]">
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
-        </div>
-
         {/* Actions */}
         <div>
+          {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
           <button
             type="submit"
             disabled={creating}
