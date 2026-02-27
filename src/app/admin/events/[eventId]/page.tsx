@@ -306,9 +306,11 @@ export default function AdminEventPage() {
             {displayedQuestions.map((q) => (
               <li
                 key={q.id}
-                className={`rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4 relative ${
-                  tab === "hidden" ? "bg-gray-50 opacity-60" : "bg-white"
-                }`}
+                className={[
+                  "rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4 relative",
+                  tab === "hidden" ? "bg-gray-50 opacity-60" : "bg-white",
+                  q.status === "ANSWERED" ? "border-l-2 border-l-green-200" : "",
+                ].join(" ")}
               >
                 {/* Score */}
                 <div className="flex flex-col items-center justify-start pt-0.5 min-w-[2rem] text-center">
@@ -333,8 +335,16 @@ export default function AdminEventPage() {
                       Pinned
                     </span>
                   )}
-                  <p className="text-sm font-semibold text-gray-900 leading-snug">{q.text}</p>
-                  <p className="text-[11px] text-gray-400 mt-1.5 leading-none">
+                  <p className="text-[18px] font-medium leading-snug text-gray-900">{q.text}</p>
+                  {q.status === "ANSWERED" && (
+                    <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 text-[10px] font-medium text-green-700 bg-green-50 rounded">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                      </svg>
+                      Answered
+                    </span>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1.5">
                     {q.isAnonymous ? "Anonymous" : q.submittedName ?? "Unknown"} ·{" "}
                     {new Date(q.createdAt).toLocaleTimeString([], {
                       hour: "2-digit",
@@ -343,29 +353,29 @@ export default function AdminEventPage() {
                   </p>
                 </div>
 
-                {/* Actions */}
-                <div className="shrink-0 flex flex-col items-end gap-2">
-                  {tab === "open" && (
-                    <>
-                      <button
-                        onClick={() => markAnswered(q.id)}
-                        disabled={actionLoading === q.id}
-                        className="px-2.5 py-1 text-xs bg-green-600 text-white rounded-md hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                      >
-                        {actionLoading === q.id ? "…" : "Mark Answered"}
-                      </button>
-                      <div className="relative">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                          title="More actions"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                            <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        {openMenu === q.id && (
-                          <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[130px]">
+                {/* Overflow menu */}
+                <div className="shrink-0 flex items-start">
+                  <div className="relative">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
+                      className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="More actions"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    {openMenu === q.id && (
+                      <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[150px]">
+                        {tab === "open" && (
+                          <>
+                            <button
+                              onClick={() => { markAnswered(q.id); setOpenMenu(null); }}
+                              disabled={actionLoading === q.id}
+                              className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              Mark Answered
+                            </button>
                             <button
                               onClick={() => { q.pinnedAt ? unpinQuestion(q.id) : pinQuestion(q.id); setOpenMenu(null); }}
                               disabled={actionLoading === q.id}
@@ -380,56 +390,18 @@ export default function AdminEventPage() {
                             >
                               Hide
                             </button>
-                          </div>
+                          </>
                         )}
-                      </div>
-                    </>
-                  )}
-                  {tab === "answered" && (
-                    <>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                        </svg>
-                        Answered
-                      </span>
-                      <div className="relative">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                          title="More actions"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                            <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        {openMenu === q.id && (
-                          <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[150px]">
-                            <button
-                              onClick={() => { markOpen(q.id); setOpenMenu(null); }}
-                              disabled={actionLoading === q.id}
-                              className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              Mark Unanswered
-                            </button>
-                          </div>
+                        {tab === "answered" && (
+                          <button
+                            onClick={() => { markOpen(q.id); setOpenMenu(null); }}
+                            disabled={actionLoading === q.id}
+                            className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            Mark Unanswered
+                          </button>
                         )}
-                      </div>
-                    </>
-                  )}
-                  {tab === "hidden" && (
-                    <div className="relative">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                        title="More actions"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                          <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      {openMenu === q.id && (
-                        <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[130px]">
+                        {tab === "hidden" && (
                           <button
                             onClick={() => { unhideQuestion(q.id); setOpenMenu(null); }}
                             disabled={actionLoading === q.id}
@@ -437,10 +409,10 @@ export default function AdminEventPage() {
                           >
                             Unhide
                           </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
