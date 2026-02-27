@@ -41,17 +41,10 @@ function LoginForm() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-sm">
-        <h1 className="text-xl font-bold mb-1">Admin Login</h1>
-        <p className="text-sm text-gray-500 mb-6">AMA Board — Host Mode</p>
-        <Link href="/" className="text-xs text-brand-700 hover:underline block -mt-4 mb-6">
-          ← Back to events
-        </Link>
+        <h1 className="text-xl font-bold mb-6 text-center">Admin Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="password">
-              Password
-            </label>
             <input
               id="password"
               type="password"
