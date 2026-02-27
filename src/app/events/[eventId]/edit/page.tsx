@@ -53,6 +53,7 @@ export default function EditEventPage() {
   const [startsAt, setStartsAt] = useState("");
   const [hostName, setHostName] = useState("");
   const [isVotingOpen, setIsVotingOpen] = useState(true);
+  const [isPublic, setIsPublic] = useState(true);
   const [eventStatus, setEventStatus] = useState<"OPEN" | "CLOSED">("OPEN");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,7 @@ export default function EditEventPage() {
         setHostName(event.hostName ?? "");
         setStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
         setIsVotingOpen(event.isVotingOpen ?? true);
+        setIsPublic(event.isPublic ?? true);
         setEventStatus(event.status ?? "OPEN");
       } catch {
         setNotFound(true);
@@ -152,6 +154,7 @@ export default function EditEventPage() {
           startsAt: etLocalToUtcIso(startsAt),
           hostName: hostName.trim(),
           isVotingOpen,
+          isPublic,
         }),
       });
       const data = await res.json();
@@ -228,6 +231,37 @@ export default function EditEventPage() {
             maxLength={100}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-xs text-gray-500 mb-1">Visibility</label>
+          <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              className={`flex-1 px-3 py-2 text-center transition-colors ${
+                isPublic
+                  ? "bg-brand-700 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              className={`flex-1 px-3 py-2 text-center border-l border-gray-300 transition-colors ${
+                !isPublic
+                  ? "bg-brand-700 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Private
+            </button>
+          </div>
+          {!isPublic && (
+            <p className="text-xs text-amber-600 mt-1">This event is unlisted.</p>
+          )}
         </div>
 
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}

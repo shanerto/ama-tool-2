@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const body = await req.json();
-  const { title, startsAt, hostName, description, isVotingOpen, status } = body;
+  const { title, startsAt, hostName, description, isVotingOpen, status, isPublic } = body;
 
   // Allow a close-only PATCH (no other fields required)
   if (status === "CLOSED") {
@@ -50,6 +50,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       hostName: hostName.trim(),
       description: description?.trim() || null,
       ...(typeof isVotingOpen === "boolean" ? { isVotingOpen } : {}),
+      ...(typeof isPublic === "boolean" ? { isPublic } : {}),
     },
   });
 

@@ -19,6 +19,7 @@ model Event {
   hostName        String?
   createdByUserId String?
   startsAt        DateTime?
+  isPublic        Boolean     @default(true)
   createdAt       DateTime    @default(now())
   questions       Question[]
 

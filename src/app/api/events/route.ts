@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
   const startsAtRaw = body?.startsAt;
   const type: "company" | "team" = body?.type === "company" ? "company" : "team";
   const hostName = body?.hostName?.trim() || null;
+  const isPublic: boolean = body?.isPublic !== false;
 
   // Server-side enforcement: non-admins cannot create company events
   if (!isAdmin && type === "company") {
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
       type,
       hostName: type === "team" ? hostName : null,
       createdByUserId,
+      isPublic,
     },
   });
   return NextResponse.json(event, { status: 201 });

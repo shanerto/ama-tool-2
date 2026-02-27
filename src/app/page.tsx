@@ -89,7 +89,7 @@ function EventCard({ event }: { event: EventRow }) {
 
 export default async function HomePage() {
   const rawEvents = await prisma.event.findMany({
-    where: { isActive: true, status: "OPEN" },
+    where: { isActive: true, status: "OPEN", isPublic: true },
     orderBy: { startsAt: "asc" },
     select: {
       id: true,

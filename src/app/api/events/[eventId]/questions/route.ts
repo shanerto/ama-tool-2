@@ -96,6 +96,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       startsAt: event.startsAt,
       type: event.type,
       hostName: event.hostName,
+      isPublic: event.isPublic,
     },
     questions: enriched,
     metrics: { questionCount, voteCount },

@@ -38,6 +38,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [hostName, setHostName] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +67,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           startsAt: etLocalToUtcIso(startsAt),
           type: effectiveType,
           hostName: effectiveType === "team" ? hostName.trim() : undefined,
+          isPublic,
         }),
       });
       const data = await res.json();
@@ -73,8 +75,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         setError(data.error ?? "Failed to create event.");
         return;
       }
-      router.push("/");
-      router.refresh(); // invalidate client router cache so homepage re-fetches from DB
+      router.push(`/events/${data.id}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -152,10 +153,9 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             Date &amp; Time{" "}
-            <span className="text-gray-400 font-normal">*</span>
+            <span className="text-gray-400 font-normal">* · Eastern Time (ET)</span>
           </label>
           <DateTimePicker value={startsAt} onChange={setStartsAt} required />
-          <p className="text-xs text-gray-400 mt-1.5">Saved in Eastern Time (ET).</p>
         </div>
 
         {/* Host name — team events only */}
@@ -175,6 +175,42 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
             />
           </div>
         )}
+
+        {/* Visibility */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Visibility
+          </label>
+          <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              className={`flex-1 px-3 py-2 text-center transition-colors ${
+                isPublic
+                  ? "bg-brand-700 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              className={`flex-1 px-3 py-2 text-center border-l border-gray-300 transition-colors ${
+                !isPublic
+                  ? "bg-brand-700 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Private
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1.5">
+            {isPublic
+              ? "Shows on the homepage."
+              : "Only people with the link can access."}
+          </p>
+        </div>
 
         {/* Error — reserve height to prevent layout shift */}
         <div className="min-h-[1.25rem]">
