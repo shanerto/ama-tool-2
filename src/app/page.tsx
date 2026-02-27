@@ -193,16 +193,17 @@ export default async function HomePage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-20">
-                <Link
-                  href="/past-events"
-                  className="text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  View Past Events →
-                </Link>
-              </div>
             </section>
           )}
+
+          <div>
+            <Link
+              href="/past-events"
+              className="text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              View Past Events →
+            </Link>
+          </div>
         </div>
       )}
 
