@@ -153,7 +153,8 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             Date &amp; Time{" "}
-            <span className="text-gray-400 font-normal">* · Eastern Time (ET)</span>
+            <span className="text-gray-400 font-normal">(Eastern Time)</span>{" "}
+            <span className="text-gray-400 font-normal">*</span>
           </label>
           <DateTimePicker value={startsAt} onChange={setStartsAt} required />
         </div>
