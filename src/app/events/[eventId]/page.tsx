@@ -497,7 +497,7 @@ export default function EventPage() {
         <button
           type="submit"
           disabled={submitting || formText.length === 0 || formText.length > 280}
-          className="mt-3 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
+          className="mt-6 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
         >
           {submitting ? "Submitting..." : "Submit Question"}
         </button>
