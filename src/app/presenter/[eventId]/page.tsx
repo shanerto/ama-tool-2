@@ -23,6 +23,7 @@ type EventInfo = {
   id: string;
   title: string;
   description: string | null;
+  startsAt: string | null;
 };
 
 type SortMode = "top" | "newest";
@@ -31,6 +32,15 @@ type IntervalSec = 3 | 5 | 10;
 type UndoEntry = { question: Question; deadline: number };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+function formatEventDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "America/New_York",
+  });
+}
 
 function relativeTime(dateStr: string): string {
   const diffSec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -312,9 +322,16 @@ export default function PresenterEventPage() {
     <main className="min-h-[calc(100vh-3rem)] flex flex-col max-w-5xl mx-auto px-12 py-14">
 
       {/* Event title — secondary, muted */}
-      <p className={`text-xs font-semibold uppercase tracking-widest mb-12 ${T.eventTitle}`}>
-        {event?.title ?? (loading ? "Loading…" : "Event")}
-      </p>
+      <div className="mb-12">
+        <p className={`text-xs font-semibold uppercase tracking-widest ${T.eventTitle}`}>
+          {event?.title ?? (loading ? "Loading…" : "Event")}
+        </p>
+        {event?.startsAt && (
+          <p className={`text-xs mt-1 ${T.eventTitle}`}>
+            {formatEventDate(event.startsAt)}
+          </p>
+        )}
+      </div>
 
       {/* Single-question focal area */}
       <div className="flex-1 flex flex-col justify-center min-h-0">
@@ -347,8 +364,6 @@ export default function PresenterEventPage() {
                 {activeQuestion.isAnonymous
                   ? "Anonymous"
                   : (activeQuestion.submittedName ?? "Unknown")}
-                {" · "}
-                {relativeTime(activeQuestion.createdAt)}
               </p>
 
               <button
