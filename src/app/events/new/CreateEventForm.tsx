@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -36,6 +36,14 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
   const [hostName, setHostName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  function openDatePicker() {
+    const el = dateInputRef.current;
+    if (!el) return;
+    el.focus();
+    try { (el as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { /* unsupported */ }
+  }
 
   const effectiveType = isAdmin ? type : "team";
 
@@ -126,13 +134,27 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           <label className="block text-xs text-gray-500 mb-1">
             Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
           </label>
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
+          <div className="relative">
+            <input
+              ref={dateInputRef}
+              type="datetime-local"
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+              required
+              onClick={openDatePicker}
+              onKeyDown={(e) => {
+                if (e.key === "Tab" || e.key === "Escape") return;
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDatePicker(); return; }
+                e.preventDefault();
+              }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer"
+            />
+            {!startsAt && (
+              <span className="pointer-events-none absolute inset-px flex items-center px-3 text-sm text-gray-400 bg-white rounded-lg">
+                Select date and time
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Host name — team events only */}
