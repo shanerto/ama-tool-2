@@ -36,6 +36,7 @@ export default function AdminEventPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [votingToggling, setVotingToggling] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -60,6 +61,13 @@ export default function AdminEventPage() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [fetchQuestions]);
+
+  useEffect(() => {
+    if (!openMenu) return;
+    function handleClick() { setOpenMenu(null); }
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [openMenu]);
 
   async function markAnswered(questionId: string) {
     setActionLoading(questionId);
@@ -298,12 +306,14 @@ export default function AdminEventPage() {
             {displayedQuestions.map((q) => (
               <li
                 key={q.id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4"
+                className={`rounded-xl border border-gray-200 shadow-sm p-4 flex gap-4 relative ${
+                  tab === "hidden" ? "bg-gray-50 opacity-60" : "bg-white"
+                }`}
               >
-                {/* Score badge */}
-                <div className="flex flex-col items-center min-w-[2.5rem]">
+                {/* Score */}
+                <div className="flex flex-col items-center justify-start pt-0.5 min-w-[2rem] text-center">
                   <span
-                    className={`text-lg font-bold ${
+                    className={`text-xl font-bold leading-none tabular-nums ${
                       q.score > 0
                         ? "text-brand-700"
                         : q.score < 0
@@ -313,18 +323,18 @@ export default function AdminEventPage() {
                   >
                     {q.score}
                   </span>
-                  <span className="text-xs text-gray-400">votes</span>
+                  <span className="text-[10px] text-gray-400 mt-0.5 leading-none">votes</span>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 leading-relaxed">
-                    {q.pinnedAt && (
-                      <span className="inline-block mr-1.5 text-brand-700" title="Pinned">📌</span>
-                    )}
-                    {q.text}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  {tab === "open" && q.pinnedAt && (
+                    <span className="inline-flex items-center text-[10px] font-medium text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full mb-1.5">
+                      Pinned
+                    </span>
+                  )}
+                  <p className="text-sm font-semibold text-gray-900 leading-snug">{q.text}</p>
+                  <p className="text-[11px] text-gray-400 mt-1.5 leading-none">
                     {q.isAnonymous ? "Anonymous" : q.submittedName ?? "Unknown"} ·{" "}
                     {new Date(q.createdAt).toLocaleTimeString([], {
                       hour: "2-digit",
@@ -334,57 +344,102 @@ export default function AdminEventPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="shrink-0 flex flex-col gap-1.5 items-end">
+                <div className="shrink-0 flex flex-col items-end gap-2">
                   {tab === "open" && (
                     <>
                       <button
                         onClick={() => markAnswered(q.id)}
                         disabled={actionLoading === q.id}
-                        className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                        className="px-2.5 py-1 text-xs bg-green-600 text-white rounded-md hover:bg-green-700 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
                       >
-                        {actionLoading === q.id ? "..." : "Mark Answered"}
+                        {actionLoading === q.id ? "…" : "Mark Answered"}
                       </button>
-                      <div className="flex gap-1.5">
+                      <div className="relative">
                         <button
-                          onClick={() => q.pinnedAt ? unpinQuestion(q.id) : pinQuestion(q.id)}
-                          disabled={actionLoading === q.id}
-                          className={`px-2.5 py-1 text-xs rounded-lg font-medium disabled:opacity-50 transition-colors whitespace-nowrap ${
-                            q.pinnedAt
-                              ? "bg-brand-100 text-brand-700 hover:bg-brand-200"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
-                          title={q.pinnedAt ? "Unpin" : "Pin to top"}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                          title="More actions"
                         >
-                          {q.pinnedAt ? "📌 Unpin" : "Pin"}
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
+                          </svg>
                         </button>
-                        <button
-                          onClick={() => hideQuestion(q.id)}
-                          disabled={actionLoading === q.id}
-                          className="px-2.5 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                          title="Hide from public without answering"
-                        >
-                          Hide
-                        </button>
+                        {openMenu === q.id && (
+                          <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[130px]">
+                            <button
+                              onClick={() => { q.pinnedAt ? unpinQuestion(q.id) : pinQuestion(q.id); setOpenMenu(null); }}
+                              disabled={actionLoading === q.id}
+                              className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              {q.pinnedAt ? "Unpin" : "Pin to top"}
+                            </button>
+                            <button
+                              onClick={() => { hideQuestion(q.id); setOpenMenu(null); }}
+                              disabled={actionLoading === q.id}
+                              className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              Hide
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
                   {tab === "answered" && (
-                    <button
-                      onClick={() => markOpen(q.id)}
-                      disabled={actionLoading === q.id}
-                      className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                    >
-                      {actionLoading === q.id ? "..." : "Reopen"}
-                    </button>
+                    <>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                        </svg>
+                        Answered
+                      </span>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                          title="More actions"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        {openMenu === q.id && (
+                          <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[150px]">
+                            <button
+                              onClick={() => { markOpen(q.id); setOpenMenu(null); }}
+                              disabled={actionLoading === q.id}
+                              className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              Mark Unanswered
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
                   {tab === "hidden" && (
-                    <button
-                      onClick={() => unhideQuestion(q.id)}
-                      disabled={actionLoading === q.id}
-                      className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
-                    >
-                      {actionLoading === q.id ? "..." : "Unhide"}
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === q.id ? null : q.id); }}
+                        className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        title="More actions"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      {openMenu === q.id && (
+                        <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-[130px]">
+                          <button
+                            onClick={() => { unhideQuestion(q.id); setOpenMenu(null); }}
+                            disabled={actionLoading === q.id}
+                            className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            Unhide
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </li>
