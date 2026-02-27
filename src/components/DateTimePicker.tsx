@@ -41,6 +41,19 @@ function formatDisplay(s: string): string {
   return `${MONTH_NAMES[month]} ${day}, ${year}  ·  ${h12}:${String(minute).padStart(2, "0")} ${ampm}`;
 }
 
+// Estimated picker height used for flip collision detection.
+// Generous enough to cover all 6 calendar rows + time + footer.
+const PICKER_EST_HEIGHT = 380;
+const PICKER_MIN_WIDTH = 288;
+const PICKER_GAP = 4; // px gap between trigger and popover
+
+type PopoverPos = {
+  top?: number;    // set when opening below
+  bottom?: number; // set when opening above (distance from viewport bottom)
+  left: number;
+  openAbove: boolean;
+};
+
 export default function DateTimePicker({ value, onChange, required }: DateTimePickerProps) {
   const today = new Date();
   const todayY = today.getFullYear();
@@ -50,22 +63,40 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
   const parsed = parseLocal(value);
 
   const [open, setOpen] = useState(false);
+  const [popoverPos, setPopoverPos] = useState<PopoverPos | null>(null);
   const [viewYear, setViewYear] = useState(parsed?.year ?? todayY);
   const [viewMonth, setViewMonth] = useState(parsed?.month ?? todayM);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync view to current value whenever the picker opens
+  // Sync view + compute fixed position whenever the picker opens
   function handleOpen() {
     if (!open) {
       const p = parseLocal(value);
       setViewYear(p?.year ?? todayY);
       setViewMonth(p?.month ?? todayM);
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const spaceBelow = vh - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+        // Flip above when below doesn't fit AND above has more room
+        const openAbove = spaceBelow < PICKER_EST_HEIGHT && spaceAbove > spaceBelow;
+        // Clamp left so the picker never overflows the right edge
+        const left = Math.max(8, Math.min(rect.left, vw - PICKER_MIN_WIDTH - 8));
+        setPopoverPos(
+          openAbove
+            ? { bottom: vh - rect.top + PICKER_GAP, left, openAbove: true }
+            : { top: rect.bottom + PICKER_GAP, left, openAbove: false }
+        );
+      }
     }
     setOpen((o) => !o);
   }
 
-  // Close on outside click or Escape
+  // Close on outside click, Escape, scroll, or resize
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
@@ -74,11 +105,16 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
+    function onScrollOrResize() { setOpen(false); }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScrollOrResize, { capture: true, passive: true });
+    window.addEventListener("resize", onScrollOrResize);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScrollOrResize, { capture: true });
+      window.removeEventListener("resize", onScrollOrResize);
     };
   }, [open]);
 
@@ -182,13 +218,25 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
         className="absolute opacity-0 pointer-events-none w-0 h-0"
       />
 
-      {/* Picker popover */}
-      {open && (
+      {/* Picker popover — position: fixed so it never pushes page layout */}
+      {open && popoverPos && (
         <div
           role="dialog"
           aria-label="Date and time picker"
-          className="absolute left-0 top-[calc(100%+4px)] z-50 bg-white rounded-xl border border-gray-100 shadow-lg origin-top-left animate-picker-in"
-          style={{ minWidth: "288px" }}
+          className={[
+            "bg-white rounded-xl border border-gray-100 shadow-lg",
+            popoverPos.openAbove
+              ? "origin-bottom-left animate-picker-in-above"
+              : "origin-top-left animate-picker-in",
+          ].join(" ")}
+          style={{
+            position: "fixed",
+            top: popoverPos.top,
+            bottom: popoverPos.bottom,
+            left: popoverPos.left,
+            minWidth: `${PICKER_MIN_WIDTH}px`,
+            zIndex: 9999,
+          }}
         >
           <div className="p-4">
 
