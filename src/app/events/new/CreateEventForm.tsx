@@ -75,8 +75,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         setError(data.error ?? "Failed to create event.");
         return;
       }
-      router.push("/");
-      router.refresh(); // invalidate client router cache so homepage re-fetches from DB
+      router.push(`/events/${data.id}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {
