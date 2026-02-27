@@ -42,8 +42,8 @@ function formatDisplay(s: string): string {
 }
 
 // Estimated picker height used for flip collision detection.
-// Generous enough to cover all 6 calendar rows + time + footer.
-const PICKER_EST_HEIGHT = 380;
+// 6 calendar rows (~246px) + headers + time + footer + padding ≈ 470px; use 500 for safety.
+const PICKER_EST_HEIGHT = 500;
 const PICKER_MIN_WIDTH = 288;
 const PICKER_GAP = 4; // px gap between trigger and popover
 
@@ -86,17 +86,27 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
         const openAbove = spaceBelow < PICKER_EST_HEIGHT && spaceAbove > spaceBelow;
         // Clamp left so the picker never overflows the right edge
         const left = Math.max(8, Math.min(rect.left, vw - PICKER_MIN_WIDTH - 8));
-        setPopoverPos(
-          openAbove
-            ? { bottom: vh - rect.top + PICKER_GAP, left, openAbove: true }
-            : { top: rect.bottom + PICKER_GAP, left, openAbove: false }
-        );
+        if (openAbove) {
+          // bottom edge of picker anchors to input top; clamp so picker doesn't exit viewport top
+          const bottom = Math.min(
+            vh - rect.top + PICKER_GAP,
+            vh - PICKER_EST_HEIGHT - 8
+          );
+          setPopoverPos({ bottom: Math.max(bottom, 8), left, openAbove: true });
+        } else {
+          // top edge of picker anchors to input bottom; clamp so picker doesn't exit viewport bottom
+          const top = Math.min(
+            rect.bottom + PICKER_GAP,
+            vh - PICKER_EST_HEIGHT - 8
+          );
+          setPopoverPos({ top: Math.max(top, 8), left, openAbove: false });
+        }
       }
     }
     setOpen((o) => !o);
   }
 
-  // Close on outside click, Escape, scroll, or resize
+  // Close on outside click, Escape, or resize (scroll is fine — picker is position:fixed)
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
@@ -105,16 +115,14 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
-    function onScrollOrResize() { setOpen(false); }
+    function onResize() { setOpen(false); }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onScrollOrResize, { capture: true, passive: true });
-    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("resize", onResize);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onScrollOrResize, { capture: true });
-      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("resize", onResize);
     };
   }, [open]);
 
