@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Event = {
@@ -59,14 +59,6 @@ export default function AdminHomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // New event form
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [createType, setCreateType] = useState<"team" | "company">("team");
-  const [createHostName, setCreateHostName] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -102,55 +94,6 @@ export default function AdminHomePage() {
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
   }, [openMenuId]);
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    setCreateError(null);
-    const t = title.trim();
-    if (!t) {
-      setCreateError("Title is required.");
-      return;
-    }
-    if (!startsAt) {
-      setCreateError("Event date/time is required.");
-      return;
-    }
-
-    if (createType === "team" && !createHostName.trim()) {
-      setCreateError("Host name is required for team events.");
-      return;
-    }
-
-    setCreating(true);
-    try {
-      const res = await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: t,
-          description: description.trim() || undefined,
-          startsAt: etLocalToUtcIso(startsAt),
-          type: createType,
-          hostName: createType === "team" ? createHostName.trim() : undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setCreateError(data.error ?? "Failed to create event.");
-        return;
-      }
-      setTitle("");
-      setDescription("");
-      setStartsAt("");
-      setCreateType("team");
-      setCreateHostName("");
-      await fetchEvents();
-    } catch {
-      setCreateError("Network error.");
-    } finally {
-      setCreating(false);
-    }
-  }
 
   function startEdit(event: Event) {
     setEditingId(event.id);
@@ -246,75 +189,15 @@ export default function AdminHomePage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Events</h1>
-
-      {/* Create event form */}
-      <form
-        onSubmit={handleCreate}
-        className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8"
-      >
-        <h2 className="font-semibold mb-3">Create New Event</h2>
-        <div className="mb-2">
-          <label className="block text-xs text-gray-500 mb-1">Event Type</label>
-          <select
-            value={createType}
-            onChange={(e) => setCreateType(e.target.value as "team" | "company")}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          >
-            <option value="team">Team Event</option>
-            <option value="company">Company Event</option>
-          </select>
-        </div>
-        <input
-          type="text"
-          placeholder="Event title (required)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={200}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
-        />
-        <input
-          type="text"
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          maxLength={500}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
-        />
-        <div className="mb-2">
-          <label className="block text-xs text-gray-500 mb-1">
-            Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
-          </label>
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
-        </div>
-        {createType === "team" && (
-          <div className="mb-2">
-            <label className="block text-xs text-gray-500 mb-1">Host Full Name</label>
-            <input
-              type="text"
-              placeholder="Host full name (required)"
-              value={createHostName}
-              onChange={(e) => setCreateHostName(e.target.value)}
-              maxLength={100}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-            />
-          </div>
-        )}
-        {createError && <p className="text-red-500 text-sm mb-2">{createError}</p>}
-        <button
-          type="submit"
-          disabled={creating}
-          className="bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Events</h1>
+        <Link
+          href="/events/new"
+          className="bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition-colors"
         >
-          {creating ? "Creating..." : "Create Event"}
-        </button>
-      </form>
+          New Event
+        </Link>
+      </div>
 
       {/* Event list */}
       {loading ? (
