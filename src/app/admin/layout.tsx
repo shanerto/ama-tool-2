@@ -7,7 +7,7 @@ import LogoutButton from "./LogoutButton";
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-brand-700 text-white px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-brand-700 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="font-semibold text-sm tracking-wide">
             Ask Paxos - Admin
