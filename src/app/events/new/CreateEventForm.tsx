@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import DateTimePicker from "@/components/DateTimePicker";
 
 // Convert a datetime-local string (e.g. "2026-03-06T10:30") treated as
@@ -184,7 +183,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
+        <div>
           <button
             type="submit"
             disabled={creating}
@@ -192,12 +191,6 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           >
             {creating ? "Creating..." : "Create Event"}
           </button>
-          <Link
-            href="/"
-            className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </Link>
         </div>
       </form>
     </main>
