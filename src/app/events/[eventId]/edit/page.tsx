@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import VotingToggle from "@/components/VotingToggle";
+import DateTimePicker from "@/components/DateTimePicker";
 
 // Convert a datetime-local string (treated as America/New_York) to UTC ISO string.
 function etLocalToUtcIso(dtLocalStr: string): string {
@@ -215,13 +216,7 @@ export default function EditEventPage() {
           <label className="block text-xs text-gray-500 mb-1">
             Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
           </label>
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
+          <DateTimePicker value={startsAt} onChange={setStartsAt} required />
         </div>
         <div className="mb-4">
           <label className="block text-xs text-gray-500 mb-1">Full Name (host)</label>

@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import DateTimePicker from "@/components/DateTimePicker";
 
 // Convert a datetime-local string (e.g. "2026-03-06T10:30") treated as
 // America/New_York time into a UTC ISO string.
@@ -126,13 +127,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           <label className="block text-xs text-gray-500 mb-1">
             Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
           </label>
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
+          <DateTimePicker value={startsAt} onChange={setStartsAt} required />
         </div>
 
         {/* Host name — team events only */}
