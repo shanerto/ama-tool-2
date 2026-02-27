@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
+import { useState, useEffect, useCallback, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import VotingToggle from "@/components/VotingToggle";
+import DateTimePicker from "@/components/DateTimePicker";
 
 // Convert a datetime-local string (treated as America/New_York) to UTC ISO string.
 function etLocalToUtcIso(dtLocalStr: string): string {
@@ -61,14 +62,6 @@ export default function EditEventPage() {
   const [deleting, setDeleting] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closing, setClosing] = useState(false);
-  const dateInputRef = useRef<HTMLInputElement>(null);
-
-  function openDatePicker() {
-    const el = dateInputRef.current;
-    if (!el) return;
-    el.focus();
-    try { (el as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { /* unsupported */ }
-  }
 
   useEffect(() => {
     async function loadEvent() {
@@ -223,27 +216,7 @@ export default function EditEventPage() {
           <label className="block text-xs text-gray-500 mb-1">
             Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
           </label>
-          <div className="relative">
-            <input
-              ref={dateInputRef}
-              type="datetime-local"
-              value={startsAt}
-              onChange={(e) => setStartsAt(e.target.value)}
-              required
-              onClick={openDatePicker}
-              onKeyDown={(e) => {
-                if (e.key === "Tab" || e.key === "Escape") return;
-                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDatePicker(); return; }
-                e.preventDefault();
-              }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer"
-            />
-            {!startsAt && (
-              <span className="pointer-events-none absolute inset-px flex items-center px-3 text-sm text-gray-400 bg-white rounded-lg">
-                Select date and time
-              </span>
-            )}
-          </div>
+          <DateTimePicker value={startsAt} onChange={setStartsAt} required />
         </div>
         <div className="mb-4">
           <label className="block text-xs text-gray-500 mb-1">Full Name (host)</label>
