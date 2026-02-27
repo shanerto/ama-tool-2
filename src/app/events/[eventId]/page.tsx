@@ -362,7 +362,7 @@ export default function EventPage() {
                     Closed
                   </span>
                 )}
-                <ShareButton />
+                {event.status !== "CLOSED" && <ShareButton />}
               </div>
               {event.hostName && (
                 <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
@@ -405,7 +405,7 @@ export default function EventPage() {
                     Closed
                   </span>
                 )}
-                <ShareButton />
+                {event?.status !== "CLOSED" && <ShareButton />}
               </div>
               {event?.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
