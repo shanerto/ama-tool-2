@@ -53,7 +53,7 @@ export default async function PresenterPickerPage() {
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       event.isActive
-                        ? "bg-gray-500 text-gray-100"
+                        ? "bg-green-900 text-green-400"
                         : "bg-gray-700 text-gray-400"
                     }`}
                   >
