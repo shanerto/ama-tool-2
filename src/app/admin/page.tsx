@@ -208,7 +208,7 @@ export default function AdminHomePage() {
     return (
       <li
         key={event.id}
-        className="bg-white rounded-xl border border-gray-200 shadow-sm p-4"
+        className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md hover:-translate-y-px hover:border-brand-200 transition-all duration-150"
       >
         {editingId === event.id ? (
           /* ── Inline edit form ── */
@@ -285,7 +285,7 @@ export default function AdminHomePage() {
         ) : (
           /* ── Normal event row ── */
           <div className="flex items-center gap-4">
-            <div className="flex-1 min-w-0">
+            <Link href={`/admin/events/${event.id}`} className="flex-1 min-w-0 block">
               <div className="flex items-center gap-2">
                 <span className="font-medium">{event.title}</span>
                 <span
@@ -304,7 +304,7 @@ export default function AdminHomePage() {
               <p className="text-xs text-gray-400 mt-1">
                 {event._count.questions} question{event._count.questions !== 1 ? "s" : ""}
               </p>
-            </div>
+            </Link>
             <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
               {confirmDeleteId === event.id ? (
                 <div className="flex gap-2">
