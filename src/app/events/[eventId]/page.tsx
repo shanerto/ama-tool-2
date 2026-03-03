@@ -919,11 +919,12 @@ function EventTime({
   return (
     <div>
       <p className="text-sm font-medium text-gray-600">
-        {etDateStr} · {etTimeStr} ET{viewerIsET && localTime ? " (your local time)" : ""}{statsStr}
+        {etDateStr} · {etTimeStr} ET
+        {localTime && !viewerIsET && (
+          <span className="font-normal text-gray-400"> ({localTime} local time)</span>
+        )}
+        {statsStr}
       </p>
-      {localTime && !viewerIsET && (
-        <p className="text-xs text-gray-400 mt-0.5">{localTime} local time</p>
-      )}
     </div>
   );
 }
