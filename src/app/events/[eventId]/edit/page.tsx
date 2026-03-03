@@ -234,15 +234,15 @@ export default function EditEventPage() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-xs text-gray-500 mb-1">Visibility</label>
-          <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Visibility</label>
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => setIsPublic(true)}
-              className={`flex-1 px-3 py-2 text-center transition-colors ${
+              className={`flex-1 px-3 py-1.5 text-center rounded-md text-sm font-medium transition-all ${
                 isPublic
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Public
@@ -250,18 +250,20 @@ export default function EditEventPage() {
             <button
               type="button"
               onClick={() => setIsPublic(false)}
-              className={`flex-1 px-3 py-2 text-center border-l border-gray-300 transition-colors ${
+              className={`flex-1 px-3 py-1.5 text-center rounded-md text-sm font-medium transition-all ${
                 !isPublic
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Private
             </button>
           </div>
-          {!isPublic && (
-            <p className="text-xs text-amber-600 mt-1">This event is unlisted.</p>
-          )}
+          <p className="text-xs text-gray-400 mt-1.5">
+            {isPublic
+              ? "Shows on the homepage."
+              : "Only people with the link can access."}
+          </p>
         </div>
 
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
