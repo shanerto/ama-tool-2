@@ -20,7 +20,7 @@ export default function VotingToggle({ isOpen, onChange, disabled = false }: Vot
         onClick={() => onChange(!isOpen)}
         disabled={disabled}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
-          isOpen ? "bg-brand-700" : "bg-gray-300"
+          isOpen ? "bg-gray-900" : "bg-gray-300"
         }`}
         role="switch"
         aria-checked={isOpen}

@@ -270,7 +270,7 @@ export default function AdminHomePage() {
               <button
                 onClick={handleEditSave}
                 disabled={editSaving}
-                className="px-3 py-1.5 text-xs bg-brand-700 text-white rounded-lg hover:bg-brand-800 font-medium disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-xs bg-gray-900 text-white rounded-lg hover:bg-gray-700 font-medium disabled:opacity-50 transition-colors"
               >
                 {editSaving ? "Saving..." : "Save Changes"}
               </button>
@@ -394,7 +394,7 @@ export default function AdminHomePage() {
         <h1 className="text-2xl font-bold">Events</h1>
         <Link
           href="/events/new"
-          className="bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition-colors"
+          className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
         >
           New Event
         </Link>

@@ -388,7 +388,7 @@ export default function EventPage() {
                 href={`/presenter/${eventId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-brand-700 text-white hover:bg-brand-800 transition-colors"
+                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors"
               >
                 Present
               </a>
@@ -497,7 +497,7 @@ export default function EventPage() {
         <button
           type="submit"
           disabled={submitting || formText.length === 0 || formText.length > 280}
-          className="mt-6 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
+          className="mt-6 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 transition-colors"
         >
           {submitting ? "Submitting..." : "Submit Question"}
         </button>
@@ -811,7 +811,7 @@ function QuestionCard({
               <button
                 onClick={onEditSave}
                 disabled={editSaving || editText.trim().length === 0}
-                className="px-3 py-1 text-xs bg-brand-700 text-white rounded-lg hover:bg-brand-800 disabled:opacity-50 font-medium transition-colors"
+                className="px-3 py-1 text-xs bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 font-medium transition-colors"
               >
                 {editSaving ? "Saving..." : "Save"}
               </button>

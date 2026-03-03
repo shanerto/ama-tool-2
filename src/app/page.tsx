@@ -152,7 +152,7 @@ export default async function HomePage() {
         </div>
         <Link
           href="/events/new"
-          className="mt-1 shrink-0 bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition-colors"
+          className="mt-1 shrink-0 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
         >
           Create Event
         </Link>

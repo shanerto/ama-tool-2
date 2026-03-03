@@ -300,7 +300,7 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
                     className={[
                       "w-full aspect-square flex items-center justify-center text-xs rounded-lg transition-colors duration-150 select-none",
                       isSel
-                        ? "bg-brand-700 text-white font-semibold"
+                        ? "bg-gray-900 text-white font-semibold"
                         : isToday
                         ? "text-brand-700 font-semibold hover:bg-brand-50"
                         : cell.cur
@@ -374,7 +374,7 @@ export default function DateTimePicker({ value, onChange, required }: DateTimePi
                       className={[
                         "text-xs px-2.5 py-1 rounded-md transition-colors font-medium disabled:opacity-30 select-none",
                         period === p && parsed
-                          ? "bg-brand-700 text-white"
+                          ? "bg-gray-900 text-white"
                           : "text-gray-500 hover:bg-brand-50 hover:text-brand-700",
                       ].join(" ")}
                     >

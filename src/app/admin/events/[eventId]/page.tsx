@@ -203,7 +203,7 @@ export default function AdminEventPage() {
             href={`/presenter/${eventId}`}
             target="_blank"
             rel="noreferrer"
-            className="text-xs text-white bg-brand-700 hover:bg-brand-800 px-2.5 py-1 rounded-md font-medium transition-colors"
+            className="text-xs text-white bg-gray-900 hover:bg-gray-700 px-2.5 py-1 rounded-md font-medium transition-colors"
           >
             Presenter Mode ↗
           </a>

@@ -219,7 +219,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           <button
             type="submit"
             disabled={creating}
-            className="bg-brand-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
+            className="bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 transition-colors"
           >
             {creating ? "Creating..." : "Create Event"}
           </button>

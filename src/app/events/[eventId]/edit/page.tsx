@@ -241,7 +241,7 @@ export default function EditEventPage() {
               onClick={() => setIsPublic(true)}
               className={`flex-1 px-3 py-2 text-center transition-colors ${
                 isPublic
-                  ? "bg-brand-700 text-white"
+                  ? "bg-gray-900 text-white"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -252,7 +252,7 @@ export default function EditEventPage() {
               onClick={() => setIsPublic(false)}
               className={`flex-1 px-3 py-2 text-center border-l border-gray-300 transition-colors ${
                 !isPublic
-                  ? "bg-brand-700 text-white"
+                  ? "bg-gray-900 text-white"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -270,7 +270,7 @@ export default function EditEventPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 disabled:opacity-50 transition-colors"
+            className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 transition-colors"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
