@@ -37,7 +37,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-slate-100 px-4">
+    <main className="min-h-screen flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm">
         <div className="flex flex-col items-center gap-2 mb-2">
           <Image src="/Question.png" alt="Ask Paxos logo" width={52} height={52} />
