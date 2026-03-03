@@ -371,7 +371,7 @@ export default function EventPage() {
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
               {event.startsAt && (
-                <div className="mt-4">
+                <div className="mt-6">
                   <EventTime startsAt={event.startsAt} />
                 </div>
               )}
@@ -411,7 +411,7 @@ export default function EventPage() {
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
               {event?.startsAt && (
-                <div className="mt-2">
+                <div className="mt-6">
                   <EventTime startsAt={event.startsAt} />
                 </div>
               )}
