@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Site-wide background */
+body {
+  background-image: url('/askbg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 /* Smooth transitions for vote buttons */
 @layer utilities {
   .transition-score {
