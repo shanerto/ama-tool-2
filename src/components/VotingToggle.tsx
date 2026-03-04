@@ -34,7 +34,7 @@ export default function VotingToggle({ isOpen, onChange, disabled = false }: Vot
       </button>
       <span
         className={`ml-3 text-xs font-semibold shrink-0 ${
-          isOpen ? "text-brand-700" : "text-gray-500"
+          isOpen ? "text-brand-700" : "text-red-500"
         }`}
       >
         {isOpen ? "OPEN" : "CLOSED"}
