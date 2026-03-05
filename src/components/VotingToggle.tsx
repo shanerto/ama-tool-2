@@ -15,30 +15,32 @@ export default function VotingToggle({ isOpen, onChange, disabled = false }: Vot
             : "Voting is frozen — participants cannot vote."}
         </p>
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(!isOpen)}
-        disabled={disabled}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
-          isOpen ? "bg-brand-700" : "bg-red-500"
-        }`}
-        role="switch"
-        aria-checked={isOpen}
-        title={isOpen ? "Click to close voting" : "Click to open voting"}
-      >
+      <div className="flex items-center gap-2 shrink-0">
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
-            isOpen ? "translate-x-5" : "translate-x-0"
+          className={`text-xs font-semibold transition-colors duration-150 ${
+            isOpen ? "text-green-600" : "text-gray-400"
           }`}
-        />
-      </button>
-      <span
-        className={`ml-3 text-xs font-semibold shrink-0 ${
-          isOpen ? "text-brand-700" : "text-red-500"
-        }`}
-      >
-        {isOpen ? "OPEN" : "CLOSED"}
-      </span>
+        >
+          {isOpen ? "OPEN" : "CLOSED"}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(!isOpen)}
+          disabled={disabled}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+            isOpen ? "bg-brand-700" : "bg-gray-300"
+          }`}
+          role="switch"
+          aria-checked={isOpen}
+          title={isOpen ? "Click to close voting" : "Click to open voting"}
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+              isOpen ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
     </div>
   );
 }
