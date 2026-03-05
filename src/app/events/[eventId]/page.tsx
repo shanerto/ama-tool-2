@@ -351,7 +351,7 @@ export default function EventPage() {
 
         {event?.type === "team" ? (
           /* ── Team event header ── */
-          <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
+          <div className="flex items-start justify-between gap-4 mt-7 flex-wrap">
             {/* Left: title, host, description, date + manage link */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -400,7 +400,7 @@ export default function EventPage() {
           </div>
         ) : (
           /* ── Company event header (share in top-right) ── */
-          <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
+          <div className="flex items-start justify-between gap-4 mt-7 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">{event?.title}</h1>

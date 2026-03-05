@@ -185,7 +185,7 @@ export default function AdminEventPage() {
       </Link>
 
       {/* Header */}
-      <div className="mt-3 mb-6">
+      <div className="mt-7 mb-6">
         <h1 className="text-2xl font-bold">{event?.title ?? "Loading..."}</h1>
         {event?.description && (
           <p className="text-gray-500 text-sm mt-1">{event.description}</p>
