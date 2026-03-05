@@ -77,7 +77,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <main className="max-w-xl mx-auto px-6 py-14">
+    <main className="max-w-2xl mx-auto px-6 py-14">
       {/* Page header */}
       <div className="mb-8">
         <Link href={isAdmin ? "/admin" : "/"} className="text-xs font-medium text-brand-700 hover:underline">
