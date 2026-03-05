@@ -3,6 +3,16 @@ import { prisma } from "@/lib/prisma";
 
 // GET /api/ticker — top questions across all active open events
 export async function GET() {
+  // Check global tickerEnabled setting (default: true)
+  const tickerSetting = await prisma.siteSetting.findUnique({
+    where: { key: "tickerEnabled" },
+  });
+  const tickerEnabled = tickerSetting ? tickerSetting.value === "true" : true;
+
+  if (!tickerEnabled) {
+    return NextResponse.json({ items: [] });
+  }
+
   const questions = await prisma.question.findMany({
     where: {
       status: "OPEN",

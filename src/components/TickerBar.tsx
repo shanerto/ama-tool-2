@@ -4,11 +4,18 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Ticker, { type TickerItem } from "./Ticker";
 
-const EXCLUDED_PATHS = ["/login", "/admin/login"];
+function isAdminRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/events/new" ||
+    /^\/events\/[^/]+\/edit(\/|$)/.test(pathname)
+  );
+}
 
 export default function TickerBar() {
   const pathname = usePathname();
-  const excluded = EXCLUDED_PATHS.includes(pathname);
+  const excluded = isAdminRoute(pathname);
 
   const [items, setItems] = useState<TickerItem[]>([]);
 

@@ -72,3 +72,11 @@ enum EventType {
   company
   team
 }
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
