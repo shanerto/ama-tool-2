@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Ticker, { type TickerItem } from "./Ticker";
 
 const TICKER_MAX_CHARS = 80;
+const TICKER_MIN_ITEMS = 5;
 const REFRESH_INTERVAL_MS = 60_000;
 
 function isAdminRoute(pathname: string): boolean {
@@ -34,27 +35,38 @@ export default function TickerBar() {
   const [displayedItems, setDisplayedItems] = useState<TickerItem[]>([]);
   // Buffer incoming data between animation cycles so scrolling never jumps
   const pendingRef = useRef<TickerItem[] | null>(null);
-  const hasLoadedRef = useRef(false);
+  // Track whether the ticker is currently visible (animation is running).
+  // When hidden, there's no animation cycle, so pending data must be applied
+  // immediately instead of waiting for onCycleComplete.
+  const isVisibleRef = useRef(false);
+
+  const applyItems = useCallback((items: TickerItem[]) => {
+    isVisibleRef.current = items.length >= TICKER_MIN_ITEMS;
+    setDisplayedItems(items);
+  }, []);
 
   const fetchItems = useCallback(async () => {
     if (excluded) return;
     try {
       const r = await fetch("/api/ticker");
       const data = await r.json();
-      if (!Array.isArray(data.items) || data.items.length === 0) return;
-      const items = processItems(data.items);
-      if (!hasLoadedRef.current) {
-        // First load — show immediately
-        hasLoadedRef.current = true;
-        setDisplayedItems(items);
+      if (!Array.isArray(data.items)) return;
+
+      // Only show the ticker when there are enough questions to feel live
+      const items =
+        data.items.length >= TICKER_MIN_ITEMS ? processItems(data.items) : [];
+
+      if (!isVisibleRef.current) {
+        // Ticker is hidden (first load or dropped below threshold) — apply now
+        applyItems(items);
       } else {
-        // Subsequent loads — stage for next animation cycle
+        // Ticker is scrolling — stage for the next animation cycle
         pendingRef.current = items;
       }
     } catch {
       // silently ignore network errors
     }
-  }, [excluded]);
+  }, [excluded, applyItems]);
 
   useEffect(() => {
     fetchItems();
@@ -64,13 +76,13 @@ export default function TickerBar() {
 
   // Called by Ticker at the end of each scroll cycle
   const handleCycleComplete = useCallback(() => {
-    if (pendingRef.current) {
-      setDisplayedItems(pendingRef.current);
+    if (pendingRef.current !== null) {
+      applyItems(pendingRef.current);
       pendingRef.current = null;
     }
-  }, []);
+  }, [applyItems]);
 
-  if (excluded || displayedItems.length === 0) return null;
+  if (excluded || displayedItems.length < TICKER_MIN_ITEMS) return null;
 
   return (
     <div className="bg-gray-950 text-white">

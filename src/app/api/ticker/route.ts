@@ -17,7 +17,7 @@ export async function GET() {
     where: {
       status: "OPEN",
       isHidden: false,
-      event: { isActive: true },
+      event: { isActive: true, isPublic: true },
     },
     include: {
       votes: { select: { value: true } },
