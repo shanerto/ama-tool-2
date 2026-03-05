@@ -188,7 +188,7 @@ export default function EditEventPage() {
         <Link href={`/events/${eventId}`} className="text-sm text-brand-700 hover:underline">
           ← Back to event
         </Link>
-        <h1 className="text-2xl font-bold mt-2">Edit Event</h1>
+        <h1 className="text-2xl font-bold mt-7">Edit Event</h1>
       </div>
 
       <form
