@@ -83,7 +83,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         <Link href={isAdmin ? "/admin" : "/"} className="text-sm text-brand-700 hover:underline">
           ← Back
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight mt-3">Create Event</h1>
+        <h1 className="text-2xl font-bold tracking-tight mt-7">Create Event</h1>
         <p className="text-sm text-gray-500 mt-1">
           Create a new team AMA and start collecting questions.
         </p>
