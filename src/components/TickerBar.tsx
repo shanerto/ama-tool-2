@@ -11,6 +11,7 @@ const REFRESH_INTERVAL_MS = 60_000;
 function isAdminRoute(pathname: string): boolean {
   return (
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/presenter") ||
     pathname === "/login" ||
     pathname === "/events/new" ||
     /^\/events\/[^/]+\/edit(\/|$)/.test(pathname)
