@@ -363,23 +363,23 @@ export default function EventPage() {
                   </span>
                 )}
               </div>
-              {event.hostName && (
-                <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
-              )}
+              <p className="text-sm text-gray-400 mt-1.5">
+                {event.hostName && <>Hosted by {event.hostName} · </>}
+                <Link
+                  href={`/events/${eventId}/edit`}
+                  className="text-gray-600 hover:text-gray-900 hover:underline focus-visible:underline focus-visible:outline-none cursor-pointer"
+                >
+                  Manage event
+                </Link>
+              </p>
               {event.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
-              <div className="mt-6 flex items-baseline justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  {event.startsAt && <EventTime startsAt={event.startsAt} />}
+              {event.startsAt && (
+                <div className="mt-6">
+                  <EventTime startsAt={event.startsAt} />
                 </div>
-                <Link
-                  href={`/events/${eventId}/edit`}
-                  className="shrink-0 text-sm text-gray-500 hover:text-gray-900 hover:underline focus-visible:underline focus-visible:outline-none cursor-pointer"
-                >
-                  Manage Event
-                </Link>
-              </div>
+              )}
             </div>
             {/* Right: Share (secondary) + Present (primary) */}
             <div className="shrink-0 self-start flex items-center gap-2 pt-1">
