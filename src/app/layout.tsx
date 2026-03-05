@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { IBM_Plex_Mono } from "next/font/google";
+import TickerBar from "@/components/TickerBar";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${ibmPlexMono.variable}`}>
       <body className="font-sans min-h-screen text-gray-900 antialiased">
+        <TickerBar />
         {children}
       </body>
     </html>
