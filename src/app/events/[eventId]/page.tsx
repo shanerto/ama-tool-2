@@ -369,26 +369,19 @@ export default function EventPage() {
               {event.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
-              {event.startsAt ? (
-                <div className="mt-6 flex items-center justify-between gap-4">
+              <div className="mt-6 flex items-baseline justify-between gap-4">
+                {event.startsAt ? (
                   <EventTime startsAt={event.startsAt} />
-                  <Link
-                    href={`/events/${eventId}/edit`}
-                    className="shrink-0 text-sm text-gray-400 hover:text-gray-600 hover:underline"
-                  >
-                    Manage Event
-                  </Link>
-                </div>
-              ) : (
-                <div className="mt-3">
-                  <Link
-                    href={`/events/${eventId}/edit`}
-                    className="text-sm text-gray-400 hover:text-gray-600 hover:underline"
-                  >
-                    Manage Event
-                  </Link>
-                </div>
-              )}
+                ) : (
+                  <span />
+                )}
+                <Link
+                  href={`/events/${eventId}/edit`}
+                  className="shrink-0 text-sm text-gray-500 hover:text-gray-900 hover:underline focus-visible:underline focus-visible:outline-none cursor-pointer"
+                >
+                  Manage Event
+                </Link>
+              </div>
             </div>
             {/* Right: Share (secondary) + Present (primary) */}
             <div className="shrink-0 self-start flex items-center gap-2 pt-1">
@@ -627,7 +620,7 @@ function ShareButton() {
           ? "border-green-500 text-green-600 bg-green-50"
           : copyState === "error"
           ? "border-red-400 text-red-500 bg-red-50"
-          : "border-gray-900 text-gray-900 bg-transparent hover:bg-gray-50"
+          : "border-gray-900 text-gray-900 bg-transparent hover:bg-gray-900 hover:text-white"
       }`}
     >
       {copyState === "copied" ? (
