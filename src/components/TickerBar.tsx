@@ -8,13 +8,12 @@ const TICKER_MAX_CHARS = 80;
 const TICKER_MIN_ITEMS = 5;
 const REFRESH_INTERVAL_MS = 15_000;
 
-function isAdminRoute(pathname: string): boolean {
+function isExcludedRoute(pathname: string): boolean {
   return (
     pathname.startsWith("/admin") ||
     pathname.startsWith("/presenter") ||
-    pathname === "/login" ||
-    pathname === "/events/new" ||
-    /^\/events\/[^/]+\/edit(\/|$)/.test(pathname)
+    pathname.startsWith("/events/") ||
+    pathname === "/login"
   );
 }
 
@@ -31,7 +30,7 @@ function processItems(raw: TickerItem[]): TickerItem[] {
 
 export default function TickerBar() {
   const pathname = usePathname();
-  const excluded = isAdminRoute(pathname);
+  const excluded = isExcludedRoute(pathname);
 
   const [displayedItems, setDisplayedItems] = useState<TickerItem[]>([]);
   // Buffer incoming data between animation cycles so scrolling never jumps
