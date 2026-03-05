@@ -134,11 +134,12 @@ export default function AdminHomePage() {
     setTickerEnabled(next);
     setTickerSaving(true);
     try {
-      await fetch("/api/admin/site-settings", {
+      const res = await fetch("/api/admin/site-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "tickerEnabled", value: String(next) }),
       });
+      if (!res.ok) setTickerEnabled(!next);
     } catch {
       setTickerEnabled(!next);
     } finally {
