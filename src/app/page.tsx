@@ -129,24 +129,24 @@ export default async function HomePage() {
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-center justify-between mb-6">
         {/* Left: logo + text block as a horizontal pair */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <Image
             src="/Question.png"
             alt="Ask Paxos logo"
             width={56}
             height={56}
-            className="shrink-0 mt-0.5"
+            className="shrink-0"
           />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Ask Paxos</h1>
-            <p className="text-gray-400 text-sm mt-0.5">Submit questions. Vote on what matters most.</p>
+            <h1 className="text-[1.7rem] font-bold tracking-tight leading-tight">Ask Paxos</h1>
+            <p className="text-gray-400 text-sm leading-snug">Submit questions. Vote on what matters most.</p>
           </div>
         </div>
         <Link
           href="/events/new"
-          className="mt-1 shrink-0 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+          className="shrink-0 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
         >
           Create Event
         </Link>
