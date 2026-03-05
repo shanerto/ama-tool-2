@@ -96,7 +96,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
         {/* Event type — admin only */}
         {isAdmin && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            <label className="block text-sm font-medium text-gray-500 mb-1.5">
               Event Type
             </label>
             <select
@@ -112,7 +112,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
 
         {/* Title */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+          <label className="block text-sm font-medium text-gray-500 mb-1.5">
             Event Title{" "}
             <span className="text-gray-400 font-normal">*</span>
           </label>
@@ -128,7 +128,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
 
         {/* Description */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+          <label className="block text-sm font-medium text-gray-500 mb-1.5">
             Description{" "}
             <span className="text-gray-400 font-normal">(optional)</span>
           </label>
@@ -144,7 +144,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
 
         {/* Date & Time */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+          <label className="block text-sm font-medium text-gray-500 mb-1.5">
             Date &amp; Time{" "}
             <span className="text-gray-400 font-normal">(Eastern Time)</span>{" "}
             <span className="text-gray-400 font-normal">*</span>
@@ -154,7 +154,7 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
 
         {/* Visibility */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+          <label className="block text-sm font-medium text-gray-500 mb-1.5">
             Visibility
           </label>
           <div className="flex bg-gray-100 rounded-lg p-0.5">
