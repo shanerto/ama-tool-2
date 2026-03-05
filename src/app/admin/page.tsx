@@ -432,7 +432,7 @@ export default function AdminHomePage() {
                   Admin Settings
                 </p>
                 <div className="px-4 py-2 flex items-center justify-between gap-3">
-                  <span className="text-sm text-gray-700">Enable Question Ticker</span>
+                  <span className="text-sm text-gray-700">Enable Ticker</span>
                   <button
                     role="switch"
                     aria-checked={tickerEnabled}
