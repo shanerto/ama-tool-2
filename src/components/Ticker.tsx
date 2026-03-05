@@ -14,7 +14,7 @@ interface TickerProps {
   duration?: number;
 }
 
-export default function Ticker({ items, duration = 40 }: TickerProps) {
+export default function Ticker({ items, duration = 44 }: TickerProps) {
   const [paused, setPaused] = useState(false);
   // Duplicate so the second copy seamlessly follows the first
   const allItems = [...items, ...items];
