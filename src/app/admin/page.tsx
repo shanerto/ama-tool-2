@@ -409,24 +409,18 @@ export default function AdminHomePage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Events</h1>
         <div className="flex items-center gap-2">
-          {/* Desktop: text button */}
-          <Link
-            href="/events/new"
-            className="hidden sm:inline-flex items-center bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-          >
-            New Event
-          </Link>
-          {/* Mobile: plus icon button */}
           <Link
             href="/events/new"
             aria-label="Create new event"
             title="Create Event"
-            className="sm:hidden inline-flex items-center justify-center w-11 h-11 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+            style={{ minHeight: 44, minWidth: 44, padding: '0 12px' }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
+            <span className="hidden sm:inline">New Event</span>
           </Link>
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <button
