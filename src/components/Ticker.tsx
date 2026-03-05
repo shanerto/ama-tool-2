@@ -39,7 +39,7 @@ export default function Ticker({ items, duration = 40 }: TickerProps) {
           <span key={i} className="shrink-0 inline-flex items-center">
             <Link
               href={`/events/${item.eventId}`}
-              className="font-ticker text-[12px] font-medium tracking-[-0.01em] uppercase hover:brightness-150 transition-[filter] duration-150"
+              className="font-ticker text-[12px] font-medium tracking-[-0.01em] uppercase hover:text-brand-700 transition-colors duration-150"
             >
               {item.text}
             </Link>
