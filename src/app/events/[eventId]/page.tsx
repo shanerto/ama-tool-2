@@ -364,13 +364,7 @@ export default function EventPage() {
                 )}
               </div>
               <p className="text-sm text-gray-400 mt-1.5">
-                {event.hostName && <>Hosted by {event.hostName} · </>}
-                <Link
-                  href={`/events/${eventId}/edit`}
-                  className="text-gray-600 hover:text-gray-900 hover:underline focus-visible:underline focus-visible:outline-none cursor-pointer"
-                >
-                  Manage event
-                </Link>
+                {event.hostName && <>Hosted by {event.hostName}</>}
               </p>
               {event.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
@@ -381,8 +375,8 @@ export default function EventPage() {
                 </div>
               )}
             </div>
-            {/* Right: Share (secondary) + Present (primary) */}
-            <div className="shrink-0 self-start flex items-center gap-2 pt-1">
+            {/* Right: Share + Present + Gear */}
+            <div className="shrink-0 self-start flex items-center pt-1" style={{ gap: "12px" }}>
               <ShareButton />
               <a
                 href={`/presenter/${eventId}`}
@@ -395,6 +389,17 @@ export default function EventPage() {
                 </svg>
                 Present
               </a>
+              <Link
+                href={`/events/${eventId}/edit`}
+                title="Manage event"
+                aria-label="Manage event"
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+                style={{ marginLeft: "4px" }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .205 1.251l-1.18 2.044a1 1 0 0 1-1.186.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.113a7.047 7.047 0 0 1 0-2.228L1.821 7.773a1 1 0 0 1-.205-1.251l1.18-2.044a1 1 0 0 1 1.186-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
+                </svg>
+              </Link>
             </div>
           </div>
         ) : (
@@ -613,12 +618,12 @@ function ShareButton() {
       onClick={handleCopy}
       title="Copy link"
       aria-label="Copy link"
-      className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+      className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-lg border transition-colors duration-150 ${
         copyState === "copied"
           ? "border-green-500 text-green-600 bg-green-50"
           : copyState === "error"
           ? "border-red-400 text-red-500 bg-red-50"
-          : "border-gray-900 text-gray-900 bg-transparent hover:bg-gray-900 hover:text-white"
+          : "border-gray-900 text-gray-900 bg-transparent hover:bg-black/[0.04]"
       }`}
     >
       {copyState === "copied" ? (
