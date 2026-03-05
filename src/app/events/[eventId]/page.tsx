@@ -370,11 +370,9 @@ export default function EventPage() {
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
               <div className="mt-6 flex items-baseline justify-between gap-4">
-                {event.startsAt ? (
-                  <EventTime startsAt={event.startsAt} />
-                ) : (
-                  <span />
-                )}
+                <div className="flex-1 min-w-0">
+                  {event.startsAt && <EventTime startsAt={event.startsAt} />}
+                </div>
                 <Link
                   href={`/events/${eventId}/edit`}
                   className="shrink-0 text-sm text-gray-500 hover:text-gray-900 hover:underline focus-visible:underline focus-visible:outline-none cursor-pointer"
