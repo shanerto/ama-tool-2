@@ -42,7 +42,7 @@ export default function AdminEventPage() {
 
   const fetchQuestions = useCallback(async () => {
     try {
-      const res = await fetch(`/api/events/${eventId}/questions?sort=score`);
+      const res = await fetch(`/api/events/${eventId}/questions?sort=score&includeHidden=true`);
       if (!res.ok) return;
       const data = await res.json();
       setEvent(data.event);

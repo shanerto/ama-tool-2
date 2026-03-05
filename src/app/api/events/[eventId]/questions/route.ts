@@ -6,12 +6,17 @@ import { VOTER_COOKIE, generateVoterId } from "@/lib/voter";
 type Params = { params: Promise<{ eventId: string }> };
 
 // GET /api/events/[eventId]/questions
-// Public → OPEN + not hidden; Admin (cookie present) → all
+// Public → OPEN + not hidden; Admin + includeHidden=true → all
 export async function GET(req: NextRequest, { params }: Params) {
   const { eventId } = await params;
   const sortParam = req.nextUrl.searchParams.get("sort"); // "score" | "newest"
+  const includeHidden = req.nextUrl.searchParams.get("includeHidden") === "true";
   const token = req.cookies.get(ADMIN_COOKIE)?.value;
   const isAdmin = token ? await verifySessionToken(token) : false;
+  // Hidden questions are only served when the caller explicitly opts in AND
+  // has a valid admin session. The public event page never passes includeHidden,
+  // so admins browsing the public site never see hidden questions there.
+  const showHidden = isAdmin && includeHidden;
   // Assign a stable voter ID on first visit so it exists before any vote
   // request fires. Without this, a new user voting on two questions in
   // quick succession would send both requests without a cookie, causing
@@ -30,7 +35,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const questions = await prisma.question.findMany({
     where: {
       eventId,
-      ...(isAdmin ? {} : { status: "OPEN", isHidden: false }),
+      ...(showHidden ? {} : { status: "OPEN", isHidden: false }),
     },
     include: {
       votes: {
