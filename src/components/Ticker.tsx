@@ -10,11 +10,13 @@ export interface TickerItem {
 
 interface TickerProps {
   items: TickerItem[];
-  /** Full scroll cycle in seconds. Defaults to 40. */
+  /** Full scroll cycle in seconds. Defaults to 44. */
   duration?: number;
+  /** Called at the end of each animation cycle (safe point to swap items). */
+  onCycleComplete?: () => void;
 }
 
-export default function Ticker({ items, duration = 44 }: TickerProps) {
+export default function Ticker({ items, duration = 44, onCycleComplete }: TickerProps) {
   const [paused, setPaused] = useState(false);
   // Duplicate so the second copy seamlessly follows the first
   const allItems = [...items, ...items];
@@ -34,6 +36,7 @@ export default function Ticker({ items, duration = 44 }: TickerProps) {
             animationPlayState: paused ? "paused" : "running",
           } as React.CSSProperties
         }
+        onAnimationIteration={onCycleComplete}
       >
         {allItems.map((item, i) => (
           <span key={i} className="shrink-0 inline-flex items-center">
