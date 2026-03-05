@@ -95,7 +95,6 @@ export async function GET(req: NextRequest, { params }: Params) {
       status: event.status,
       startsAt: event.startsAt,
       type: event.type,
-      hostName: event.hostName,
       isPublic: event.isPublic,
     },
     questions: enriched,

@@ -51,7 +51,6 @@ export default function EditEventPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
-  const [hostName, setHostName] = useState("");
   const [isVotingOpen, setIsVotingOpen] = useState(true);
   const [isPublic, setIsPublic] = useState(true);
   const [eventStatus, setEventStatus] = useState<"OPEN" | "CLOSED">("OPEN");
@@ -80,7 +79,6 @@ export default function EditEventPage() {
         }
         setTitle(event.title ?? "");
         setDescription(event.description ?? "");
-        setHostName(event.hostName ?? "");
         setStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
         setIsVotingOpen(event.isVotingOpen ?? true);
         setIsPublic(event.isPublic ?? true);
@@ -141,7 +139,6 @@ export default function EditEventPage() {
     const t = title.trim();
     if (!t) { setError("Title is required."); return; }
     if (!startsAt) { setError("Event date/time is required."); return; }
-    if (!hostName.trim()) { setError("Host name is required."); return; }
 
     setSaving(true);
     try {
@@ -152,7 +149,6 @@ export default function EditEventPage() {
           title: t,
           description: description.trim() || null,
           startsAt: etLocalToUtcIso(startsAt),
-          hostName: hostName.trim(),
           isVotingOpen,
           isPublic,
         }),
@@ -215,22 +211,11 @@ export default function EditEventPage() {
           maxLength={500}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
-        <div className="mb-2">
+        <div className="mb-4">
           <label className="block text-xs text-gray-500 mb-1">
             Date &amp; Time <span className="text-gray-400">(Eastern Time)</span>
           </label>
           <DateTimePicker value={startsAt} onChange={setStartsAt} required />
-        </div>
-        <div className="mb-4">
-          <label className="block text-xs text-gray-500 mb-1">Full Name (host)</label>
-          <input
-            type="text"
-            placeholder="Your full name (required)"
-            value={hostName}
-            onChange={(e) => setHostName(e.target.value)}
-            maxLength={100}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
         </div>
 
         <div className="mb-4">

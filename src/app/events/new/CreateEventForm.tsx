@@ -37,7 +37,6 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
-  const [hostName, setHostName] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +50,6 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
     const t = title.trim();
     if (!t) { setError("Title is required."); return; }
     if (!startsAt) { setError("Event date/time is required."); return; }
-    if (effectiveType === "team" && !hostName.trim()) {
-      setError("Host name is required for team events.");
-      return;
-    }
-
     setCreating(true);
     try {
       const res = await fetch("/api/events", {
@@ -66,7 +60,6 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           description: description.trim() || undefined,
           startsAt: etLocalToUtcIso(startsAt),
           type: effectiveType,
-          hostName: effectiveType === "team" ? hostName.trim() : undefined,
           isPublic,
         }),
       });
@@ -158,24 +151,6 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           </label>
           <DateTimePicker value={startsAt} onChange={setStartsAt} required />
         </div>
-
-        {/* Host name — team events only */}
-        {effectiveType === "team" && (
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">
-              Host Name{" "}
-              <span className="text-gray-400 font-normal">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Your full name"
-              value={hostName}
-              onChange={(e) => setHostName(e.target.value)}
-              maxLength={100}
-              className={inputClass}
-            />
-          </div>
-        )}
 
         {/* Visibility */}
         <div>

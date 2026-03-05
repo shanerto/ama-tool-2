@@ -33,7 +33,6 @@ type EventRow = {
   description: string | null;
   startsAt: Date | null;
   type: "company" | "team";
-  hostName: string | null;
   questionCount: number;
   voteCount: number;
 };
@@ -50,9 +49,6 @@ function EventCard({ event }: { event: EventRow }) {
         {/* Left: event info */}
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-lg">{event.title}</div>
-          {event.type === "team" && event.hostName && (
-            <div className="text-gray-400 text-sm mt-0.5">Hosted by {event.hostName}</div>
-          )}
           {event.description && (
             <div className="text-gray-500 text-sm mt-1">{event.description}</div>
           )}
@@ -97,7 +93,6 @@ export default async function HomePage() {
       description: true,
       startsAt: true,
       type: true,
-      hostName: true,
       _count: { select: { questions: { where: { isHidden: false } } } },
     },
   });
@@ -124,7 +119,6 @@ export default async function HomePage() {
     description: e.description,
     startsAt: e.startsAt,
     type: e.type,
-    hostName: e.hostName,
     questionCount: e._count.questions,
     voteCount: voteCountMap.get(e.id) ?? 0,
   }));

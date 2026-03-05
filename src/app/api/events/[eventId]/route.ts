@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 type Params = { params: Promise<{ eventId: string }> };
 
 // PATCH /api/events/[eventId] — update a team event (no admin auth, guest-managed)
-// Body: { title, startsAt, hostName, description?, isVotingOpen? }
+// Body: { title, startsAt, description?, isVotingOpen?, isPublic? }
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { eventId } = await params;
 
@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const body = await req.json();
-  const { title, startsAt, hostName, description, isVotingOpen, status, isPublic } = body;
+  const { title, startsAt, description, isVotingOpen, status, isPublic } = body;
 
   // Allow a close-only PATCH (no other fields required)
   if (status === "CLOSED") {
@@ -38,16 +38,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (isNaN(startsAtDate.getTime())) {
     return NextResponse.json({ error: "Invalid date/time" }, { status: 400 });
   }
-  if (!hostName?.trim()) {
-    return NextResponse.json({ error: "Host name is required for team events" }, { status: 400 });
-  }
-
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
       title: title.trim(),
       startsAt: startsAtDate,
-      hostName: hostName.trim(),
       description: description?.trim() || null,
       ...(typeof isVotingOpen === "boolean" ? { isVotingOpen } : {}),
       ...(typeof isPublic === "boolean" ? { isPublic } : {}),

@@ -8,7 +8,7 @@ export async function GET() {
   const events = await prisma.event.findMany({
     where: { isActive: true },
     orderBy: { startsAt: "asc" },
-    select: { id: true, title: true, description: true, startsAt: true, createdAt: true, type: true, hostName: true },
+    select: { id: true, title: true, description: true, startsAt: true, createdAt: true, type: true },
   });
   return NextResponse.json(events);
 }
@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
   const description = body?.description?.trim() || null;
   const startsAtRaw = body?.startsAt;
   const type: "company" | "team" = body?.type === "company" ? "company" : "team";
-  const hostName = body?.hostName?.trim() || null;
   const isPublic: boolean = body?.isPublic !== false;
 
   // Server-side enforcement: non-admins cannot create company events
@@ -45,18 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid event date/time" }, { status: 400 });
   }
 
-  // Team events require a host name
-  if (type === "team" && !hostName) {
-    return NextResponse.json({ error: "Host name is required for team events" }, { status: 400 });
-  }
-
   const event = await prisma.event.create({
     data: {
       title,
       description,
       startsAt,
       type,
-      hostName: type === "team" ? hostName : null,
       createdByUserId,
       isPublic,
     },

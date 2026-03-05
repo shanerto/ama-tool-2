@@ -31,7 +31,6 @@ type EventRow = {
   description: string | null;
   startsAt: Date | null;
   type: "company" | "team";
-  hostName: string | null;
   questionCount: number;
   voteCount: number;
 };
@@ -46,7 +45,6 @@ export default async function PastEventsPage() {
       description: true,
       startsAt: true,
       type: true,
-      hostName: true,
       _count: { select: { questions: { where: { isHidden: false } } } },
     },
   });
@@ -72,7 +70,6 @@ export default async function PastEventsPage() {
     description: e.description,
     startsAt: e.startsAt,
     type: e.type,
-    hostName: e.hostName,
     questionCount: e._count.questions,
     voteCount: voteCountMap.get(e.id) ?? 0,
   }));
@@ -149,9 +146,6 @@ function PastEventCard({ event }: { event: EventRow }) {
               Closed
             </span>
           </div>
-          {event.type === "team" && event.hostName && (
-            <div className="text-gray-400 text-sm mt-0.5">Hosted by {event.hostName}</div>
-          )}
           {event.description && (
             <div className="text-gray-400 text-sm mt-1">{event.description}</div>
           )}

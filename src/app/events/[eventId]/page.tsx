@@ -26,7 +26,6 @@ type Event = {
   status: "OPEN" | "CLOSED";
   startsAt: string | null;
   type: "company" | "team";
-  hostName: string | null;
 };
 
 type SortMode = "score" | "newest";
@@ -363,9 +362,6 @@ export default function EventPage() {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-400 mt-1.5">
-                {event.hostName && <>Hosted by {event.hostName}</>}
-              </p>
               {event.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}

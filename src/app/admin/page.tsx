@@ -13,7 +13,6 @@ type Event = {
   startsAt: string | null;
   createdAt: string;
   type: "company" | "team";
-  hostName: string | null;
   _count: { questions: number };
 };
 
@@ -87,7 +86,6 @@ export default function AdminHomePage() {
   const [editDescription, setEditDescription] = useState("");
   const [editStartsAt, setEditStartsAt] = useState("");
   const [editType, setEditType] = useState<"team" | "company">("team");
-  const [editHostName, setEditHostName] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -114,7 +112,6 @@ export default function AdminHomePage() {
     setEditDescription(event.description ?? "");
     setEditStartsAt(event.startsAt ? utcIsoToEtLocal(event.startsAt) : "");
     setEditType(event.type);
-    setEditHostName(event.hostName ?? "");
     setEditError(null);
   }
 
@@ -123,11 +120,6 @@ export default function AdminHomePage() {
     const t = editTitle.trim();
     if (!t) {
       setEditError("Title is required.");
-      return;
-    }
-
-    if (editType === "team" && !editHostName.trim()) {
-      setEditError("Host name is required for team events.");
       return;
     }
 
@@ -143,7 +135,6 @@ export default function AdminHomePage() {
           description: editDescription.trim() || null,
           startsAt: editStartsAt ? etLocalToUtcIso(editStartsAt) : null,
           type: editType,
-          hostName: editType === "team" ? editHostName.trim() : null,
         }),
       });
       const data = await res.json();
@@ -252,19 +243,6 @@ export default function AdminHomePage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
-            {editType === "team" && (
-              <div className="mb-2">
-                <label className="block text-xs text-gray-500 mb-1">Host Full Name</label>
-                <input
-                  type="text"
-                  value={editHostName}
-                  onChange={(e) => setEditHostName(e.target.value)}
-                  maxLength={100}
-                  placeholder="Host full name (required)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-                />
-              </div>
-            )}
             {editError && <p className="text-red-500 text-sm mb-2">{editError}</p>}
             <div className="flex gap-2">
               <button
@@ -298,9 +276,6 @@ export default function AdminHomePage() {
                   {event.isPublic ? "Public" : "Private"}
                 </span>
               </div>
-              {event.type === "team" && event.hostName && (
-                <p className="text-xs text-gray-400 mt-0.5">Hosted by {event.hostName}</p>
-              )}
               <p className="text-xs text-gray-400 mt-1">
                 {event._count.questions} question{event._count.questions !== 1 ? "s" : ""}
               </p>
