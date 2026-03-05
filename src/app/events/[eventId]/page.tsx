@@ -353,7 +353,7 @@ export default function EventPage() {
         {event?.type === "team" ? (
           /* ── Team event header ── */
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
-            {/* Left: title, host, description, date + inline stats */}
+            {/* Left: title, host, description, date + manage link */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">{event.title}</h1>
@@ -362,7 +362,6 @@ export default function EventPage() {
                     Closed
                   </span>
                 )}
-                {event.status !== "CLOSED" && <ShareButton />}
               </div>
               {event.hostName && (
                 <p className="text-sm text-gray-400 mt-1.5">Hosted by {event.hostName}</p>
@@ -370,32 +369,45 @@ export default function EventPage() {
               {event.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
               )}
-              {event.startsAt && (
-                <div className="mt-6">
+              {event.startsAt ? (
+                <div className="mt-6 flex items-center justify-between gap-4">
                   <EventTime startsAt={event.startsAt} />
+                  <Link
+                    href={`/events/${eventId}/edit`}
+                    className="shrink-0 text-sm text-gray-400 hover:text-gray-600 hover:underline"
+                  >
+                    Manage Event
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <Link
+                    href={`/events/${eventId}/edit`}
+                    className="text-sm text-gray-400 hover:text-gray-600 hover:underline"
+                  >
+                    Manage Event
+                  </Link>
                 </div>
               )}
             </div>
-            {/* Right: Present (primary) + Manage (secondary) */}
+            {/* Right: Share (secondary) + Present (primary) */}
             <div className="shrink-0 self-start flex items-center gap-2 pt-1">
-              <Link
-                href={`/events/${eventId}/edit`}
-                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-              >
-                Manage
-              </Link>
+              <ShareButton />
               <a
                 href={`/presenter/${eventId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M3 3.732a1.5 1.5 0 0 1 2.305-1.265l6.706 4.267a1.5 1.5 0 0 1 0 2.531L5.305 13.533A1.5 1.5 0 0 1 3 12.267V3.732Z" />
+                </svg>
                 Present
               </a>
             </div>
           </div>
         ) : (
-          /* ── Company event header (no controls, stats in right column) ── */
+          /* ── Company event header (share in top-right) ── */
           <div className="flex items-start justify-between gap-4 mt-4 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -405,7 +417,6 @@ export default function EventPage() {
                     Closed
                   </span>
                 )}
-                {event?.status !== "CLOSED" && <ShareButton />}
               </div>
               {event?.description && (
                 <p className="text-gray-500 text-sm mt-1">{event.description}</p>
@@ -416,6 +427,11 @@ export default function EventPage() {
                 </div>
               )}
             </div>
+            {event?.status !== "CLOSED" && (
+              <div className="shrink-0 self-start pt-1">
+                <ShareButton />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -602,42 +618,30 @@ function ShareButton() {
   }
 
   return (
-    <div className="relative shrink-0">
-      <button
-        onClick={handleCopy}
-        title="Copy link"
-        aria-label="Copy link"
-        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
-          copyState === "copied"
-            ? "bg-green-100 text-green-600"
-            : copyState === "error"
-            ? "bg-red-100 text-red-500"
-            : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
-        }`}
-      >
-        {copyState === "copied" ? (
-          /* Checkmark */
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-            <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-          </svg>
-        ) : (
-          /* Share icon — arrow pointing up out of a tray */
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-            <path d="M8 2L5.25 5.5H7V11H9V5.5H10.75L8 2Z" />
-            <path d="M2.5 9.5V14H13.5V9.5H12V13H4V9.5Z" />
-          </svg>
-        )}
-      </button>
-      {copyState !== "idle" && (
-        <p className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-xs whitespace-nowrap z-10 rounded-md px-2 py-1 pointer-events-none ${
-          copyState === "copied"
-            ? "bg-gray-800 text-white"
-            : "bg-red-50 text-red-600 border border-red-100"
-        }`}>
-          {copyState === "copied" ? "Link copied" : "Couldn\u2019t copy link"}
-        </p>
+    <button
+      onClick={handleCopy}
+      title="Copy link"
+      aria-label="Copy link"
+      className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+        copyState === "copied"
+          ? "border-green-500 text-green-600 bg-green-50"
+          : copyState === "error"
+          ? "border-red-400 text-red-500 bg-red-50"
+          : "border-gray-900 text-gray-900 bg-transparent hover:bg-gray-50"
+      }`}
+    >
+      {copyState === "copied" ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+          <path d="M8 2L5.25 5.5H7V11H9V5.5H10.75L8 2Z" />
+          <path d="M2.5 9.5V14H13.5V9.5H12V13H4V9.5Z" />
+        </svg>
       )}
-    </div>
+      {copyState === "copied" ? "Copied!" : copyState === "error" ? "Failed" : "Share"}
+    </button>
   );
 }
 
