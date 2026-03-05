@@ -18,11 +18,12 @@ export async function GET() {
   const items = questions
     .map((q) => ({
       text: q.text,
+      eventId: q.eventId,
       score: q.votes.reduce((sum, v) => sum + v.value, 0),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 20)
-    .map((q) => q.text);
+    .map(({ text, eventId }) => ({ text, eventId }));
 
   return NextResponse.json({ items });
 }

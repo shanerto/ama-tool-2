@@ -1,28 +1,54 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
+export interface TickerItem {
+  text: string;
+  eventId: string;
+}
+
 interface TickerProps {
-  items: string[];
+  items: TickerItem[];
   /** Full scroll cycle in seconds. Defaults to 40. */
   duration?: number;
 }
 
 export default function Ticker({ items, duration = 40 }: TickerProps) {
+  const [paused, setPaused] = useState(false);
   // Duplicate so the second copy seamlessly follows the first
   const allItems = [...items, ...items];
 
   return (
-    <div className="overflow-hidden" aria-label="Question ticker">
+    <div
+      className="overflow-hidden h-8 flex items-center"
+      aria-label="Question ticker"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div
         className="animate-ticker flex whitespace-nowrap"
-        style={{ "--ticker-duration": `${duration}s` } as React.CSSProperties}
+        style={
+          {
+            "--ticker-duration": `${duration}s`,
+            animationPlayState: paused ? "paused" : "running",
+          } as React.CSSProperties
+        }
       >
         {allItems.map((item, i) => (
-          <span
-            key={i}
-            className="font-ticker text-[13px] font-medium tracking-[-0.01em] uppercase shrink-0 inline-flex items-center"
-          >
-            {item}
-            <span className="mx-5 opacity-40" aria-hidden="true">→</span>
+          <span key={i} className="shrink-0 inline-flex items-center">
+            <Link
+              href={`/events/${item.eventId}`}
+              className="font-ticker text-[12px] font-medium tracking-[-0.01em] uppercase hover:brightness-150 transition-[filter] duration-150"
+            >
+              {item.text}
+            </Link>
+            <span
+              className="mx-[17px] opacity-45 font-ticker text-[12px] select-none"
+              aria-hidden="true"
+            >
+              •
+            </span>
           </span>
         ))}
       </div>

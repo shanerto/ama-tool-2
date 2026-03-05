@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import Ticker from "./Ticker";
+import Ticker, { type TickerItem } from "./Ticker";
 
 const EXCLUDED_PATHS = ["/login", "/admin/login"];
 
@@ -10,7 +10,7 @@ export default function TickerBar() {
   const pathname = usePathname();
   const excluded = EXCLUDED_PATHS.includes(pathname);
 
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<TickerItem[]>([]);
 
   useEffect(() => {
     if (excluded) return;
@@ -27,7 +27,7 @@ export default function TickerBar() {
   if (excluded || items.length === 0) return null;
 
   return (
-    <div className="bg-gray-950 text-white py-2.5">
+    <div className="bg-gray-950 text-white">
       <Ticker items={items} />
     </div>
   );
