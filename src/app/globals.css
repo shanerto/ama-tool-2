@@ -49,3 +49,13 @@ body {
 .animate-picker-in-above {
   animation: picker-in-above 0.15s ease-out both;
 }
+
+/* Question ticker */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll var(--ticker-duration, 40s) linear infinite;
+}

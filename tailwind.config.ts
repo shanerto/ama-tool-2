@@ -24,6 +24,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "sans-serif"],
+        ticker: ["var(--font-ibm-plex-mono)", "monospace"],
       },
     },
   },
