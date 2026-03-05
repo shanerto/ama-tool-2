@@ -6,7 +6,7 @@ import Ticker, { type TickerItem } from "./Ticker";
 
 const TICKER_MAX_CHARS = 80;
 const TICKER_MIN_ITEMS = 5;
-const REFRESH_INTERVAL_MS = 60_000;
+const REFRESH_INTERVAL_MS = 15_000;
 
 function isAdminRoute(pathname: string): boolean {
   return (
@@ -57,8 +57,8 @@ export default function TickerBar() {
       const items =
         data.items.length >= TICKER_MIN_ITEMS ? processItems(data.items) : [];
 
-      if (!isVisibleRef.current) {
-        // Ticker is hidden (first load or dropped below threshold) — apply now
+      if (!isVisibleRef.current || items.length === 0) {
+        // Ticker is hidden, or items cleared (disabled/threshold) — apply now
         applyItems(items);
       } else {
         // Ticker is scrolling — stage for the next animation cycle
