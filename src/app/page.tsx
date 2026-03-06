@@ -134,13 +134,13 @@ export default async function HomePage() {
         <div className="flex items-center gap-3">
           <Image
             src="/Question.png"
-            alt="Ask Paxos logo"
+            alt="PAXQ logo"
             width={56}
             height={56}
             className="shrink-0"
           />
           <div>
-            <h1 className="text-[1.7rem] font-bold tracking-tight leading-tight">Ask Paxos</h1>
+            <h1 className="text-[1.7rem] font-bold tracking-tight leading-tight">PAXQ</h1>
             <p className="text-gray-400 text-sm leading-snug">Submit questions. Vote on what matters most.</p>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default async function HomePage() {
       <footer className="mt-16 border-t border-gray-100 pt-4">
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
           <span className="text-xs text-gray-400">
-            Ask Paxos · Built for thoughtful conversations
+            PAXQ · Built for thoughtful conversations
           </span>
           <Link
             href="/admin/login"

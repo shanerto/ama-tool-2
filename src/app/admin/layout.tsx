@@ -10,7 +10,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 bg-brand-700 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="font-semibold text-sm tracking-wide">
-            Ask Paxos - Admin
+            PAXQ - Admin
           </span>
           <Link href="/" className="text-xs text-brand-200 hover:text-white transition-colors">
             ← Back to events

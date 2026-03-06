@@ -106,7 +106,7 @@ function PresenterLayoutInner({ children }: { children: ReactNode }) {
             dark ? "text-gray-100" : "text-gray-700"
           }`}
         >
-          Ask Paxos
+          PAXQ
         </span>
 
         {eventId && (
