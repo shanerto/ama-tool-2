@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import SiteFooter from "@/components/SiteFooter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -126,6 +127,8 @@ export default async function PastEventsPage() {
           )}
         </div>
       )}
+
+      <SiteFooter />
     </main>
   );
 }

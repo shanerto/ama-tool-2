@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo, useLayoutEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import SiteFooter from "@/components/SiteFooter";
 
 type Question = {
   id: string;
@@ -593,6 +594,8 @@ export default function EventPage() {
           ))}
         </ul>
       )}
+
+      <SiteFooter />
     </main>
   );
 }

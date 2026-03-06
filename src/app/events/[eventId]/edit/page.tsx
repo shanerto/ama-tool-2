@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import VotingToggle from "@/components/VotingToggle";
 import DateTimePicker from "@/components/DateTimePicker";
+import SiteFooter from "@/components/SiteFooter";
 
 // Convert a datetime-local string (treated as America/New_York) to UTC ISO string.
 function etLocalToUtcIso(dtLocalStr: string): string {
@@ -331,6 +332,8 @@ export default function EditEventPage() {
           deleting={deleting}
         />
       )}
+
+      <SiteFooter />
     </main>
   );
 }

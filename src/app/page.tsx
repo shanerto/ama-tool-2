@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { LocalTime } from "./LocalTime";
+import SiteFooter from "@/components/SiteFooter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -201,33 +202,7 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="mt-16 border-t border-black/[0.08] pt-6 pb-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Left: Paxos logo + tagline */}
-          <div className="flex items-center gap-2.5">
-            <Image
-              src="/paxoslogo.png"
-              alt="Paxos"
-              height={22}
-              width={0}
-              sizes="100vw"
-              className="w-auto opacity-80"
-              style={{ height: "22px", width: "auto" }}
-            />
-            <span className="text-xs text-gray-400">
-              PAXQ · Built for thoughtful conversations
-            </span>
-          </div>
-          {/* Right: Admin Login */}
-          <Link
-            href="/admin/login"
-            className="text-xs text-gray-400 hover:text-gray-600 hover:underline transition-colors"
-          >
-            Admin Login
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

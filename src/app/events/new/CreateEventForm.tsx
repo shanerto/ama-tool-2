@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DateTimePicker from "@/components/DateTimePicker";
+import SiteFooter from "@/components/SiteFooter";
 
 // Convert a datetime-local string (e.g. "2026-03-06T10:30") treated as
 // America/New_York time into a UTC ISO string.
@@ -200,6 +201,8 @@ export default function CreateEventForm({ isAdmin }: { isAdmin: boolean }) {
           </button>
         </div>
       </form>
+
+      <SiteFooter />
     </main>
   );
 }

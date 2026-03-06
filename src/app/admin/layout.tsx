@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
+import SiteFooter from "@/components/SiteFooter";
 
 // Middleware already protects /admin/* routes — this layout just provides
 // a consistent admin shell.
@@ -19,6 +20,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <LogoutButton />
       </header>
       {children}
+      <div className="max-w-2xl mx-auto px-6">
+        <SiteFooter />
+      </div>
     </div>
   );
 }
