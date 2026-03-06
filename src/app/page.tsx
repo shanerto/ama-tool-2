@@ -147,9 +147,12 @@ export default async function HomePage() {
         </div>
         <Link
           href="/events/new"
-          className="shrink-0 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+          aria-label="Create event"
+          className="shrink-0 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center justify-center
+            w-9 h-9 text-xl sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:text-sm"
         >
-          Create Event
+          <span className="sm:hidden leading-none">+</span>
+          <span className="hidden sm:inline">Create Event</span>
         </Link>
       </div>
 
