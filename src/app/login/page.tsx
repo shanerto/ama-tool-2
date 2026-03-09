@@ -46,9 +46,6 @@ function LoginForm() {
         className="object-cover"
         priority
       />
-      {/* Overlay to keep card readable */}
-      <div className="absolute inset-0 bg-black/40" />
-
       <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm">
         <div className="flex flex-col items-center gap-2 mb-2">
           <Image src="/Question.png" alt="PAXQ logo" width={52} height={52} />
