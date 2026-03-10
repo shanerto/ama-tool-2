@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -39,8 +40,15 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-sm">
+    <main className="relative min-h-screen flex items-center justify-center px-4">
+      <Image
+        src="/askbg.jpg"
+        alt=""
+        fill
+        className="object-cover"
+        priority
+      />
+      <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-sm">
         <h1 className="text-xl font-bold mb-6 text-center">Admin Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">

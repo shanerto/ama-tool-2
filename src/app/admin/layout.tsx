@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import LogoutButton from "./LogoutButton";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -7,7 +8,14 @@ import SiteFooter from "@/components/SiteFooter";
 // a consistent admin shell.
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative min-h-screen">
+      <Image
+        src="/askbg.jpg"
+        alt=""
+        fill
+        className="object-cover -z-10"
+        priority
+      />
       <header className="sticky top-0 z-50 bg-brand-700 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="font-semibold text-sm tracking-wide">
